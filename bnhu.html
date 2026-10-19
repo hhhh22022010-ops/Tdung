@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Em Có Yêu Anh Hog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Dancing+Script:wght@600;700&family=Be+Vietnam+Pro:wght@300;400;600&display=swap&subset=vietnamese" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #06010a; }
+        
+        .scene {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease-in-out;
+            z-index: 1;
+        }
+        .scene.active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .scene-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        #start-overlay {
+            position: fixed;
+            inset: 0;
+            background: #06010a;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-family: 'Dancing Script', cursive;
+            transition: opacity 1s;
+        }
+        #start-overlay h1 {
+            font-size: 3rem;
+            color: #ff6fae;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 20px #ff3d84;
+            text-align: center;
+            padding: 0 20px;
+        }
+        #start-btn {
+            padding: 1rem 3rem;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #ff6fae, #ff3d84);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 0 20px #ff3d84;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        #start-btn:hover { transform: scale(1.05); }
+
+        /* === CSS CHO MÀN HÌNH CHẠY CHỮ (MÀN 3) === */
+        #scene3 {
+            background: radial-gradient(circle at center, #1b0422 0%, #06010a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .lyric-container {
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+            height: 200px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .lyric-line {
+            position: absolute;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 111, 174, 0.8), 0 0 30px rgba(255, 61, 132, 0.5);
+            line-height: 1.4;
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+            transition: opacity 1s ease, transform 1s ease;
+            pointer-events: none;
+        }
+        .lyric-line.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        .lyric-line.fade-out {
+            opacity: 0;
+            transform: scale(1.1) translateY(-20px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-overlay">
+        <h1>Em Có Yêu Anh Hog</h1>
+        <button id="start-btn">Dạ Có</button>
+    </div>
+
+    <!-- === HỆ THỐNG ÂM THANH === -->
+    <audio id="music-1" preload="auto">
+        <source src="https://raw.githubusercontent.com/hhhh22022010-ops/Tdung/main/AhaTik_nh%E1%BA%A1c%20n%E1%BB%81n%20-%20Sky%20M-TP%20L%C3%A0o%20Cai_31803c0e-d65e-4a36-b24e-65de8cc94e27.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="music-2" preload="auto">
+        <source src="https://raw.githubusercontent.com/hhhh22022010-ops/Tdung/main/AhaTik_%C3%A2m%20thanh%20g%E1%BB%91c%20-%20La%20Ph%C6%B0%E1%BB%9Bc%20To%C3%A0n_7c88356c-1591-42d6-b3d3-e736b2c2d96e.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="music-3" preload="auto" loop>
+        <source src="https://raw.githubusercontent.com/hhhh22022010-ops/Tdung/main/6d712d76eccc595aa786c2d3d49b094f.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- MÀN 1: Bắn cung -->
+    <div id="scene1" class="scene">
+        <iframe id="iframe-bow" class="scene-iframe" srcdoc="
+            <!DOCTYPE html>
+            <html lang='vi'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+                <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; touch-action: none; }
+                    body { overflow: hidden; background: radial-gradient(circle at center, #1b0422 0%, #06010a 100%); }
+                    #canvas-container { width: 100vw; height: 100vh; display: block; cursor: crosshair; }
+                </style>
+            </head>
+            <body>
+                <div id='canvas-container'></div>
+                <script>
+                    const container = document.getElementById('canvas-container');
+                    const scene = new THREE.Scene();
+                    scene.fog = new THREE.FogExp2(0x0e0214, 0.015);
+                    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+                    camera.position.set(0, 0, 26);
+                    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                    container.appendChild(renderer.domElement);
+
+                    const ambientLight = new THREE.AmbientLight(0xfff0f5, 0.9); scene.add(ambientLight);
+                    const mainDirLight = new THREE.DirectionalLight(0xffebee, 1.5); mainDirLight.position.set(6, 12, 10); scene.add(mainDirLight);
+                    const heartLight = new THREE.PointLight(0xff1493, 3, 16); scene.add(heartLight);
+
+                    function createHeartGeometry(scale) {
+                        const shape = new THREE.Shape(); const s = scale;
+                        shape.moveTo(0, 0.4 * s);
+                        shape.bezierCurveTo(0, 0.7 * s, -0.4 * s, 1.0 * s, -0.8 * s, 1.0 * s);
+                        shape.bezierCurveTo(-1.3 * s, 1.0 * s, -1.3 * s, 0.4 * s, -1.3 * s, 0.4 * s);
+                        shape.bezierCurveTo(-1.3 * s, -0.1 * s, -0.7 * s, -0.6 * s, 0, -1.2 * s);
+                        shape.bezierCurveTo(0.7 * s, -0.6 * s, 1.3 * s, -0.1 * s, 1.3 * s, 0.4 * s);
+                        shape.bezierCurveTo(1.3 * s, 0.4 * s, 1.3 * s, 1.0 * s, 0.8 * s, 1.0 * s);
+                        shape.bezierCurveTo(0.4 * s, 1.0 * s, 0, 0.7 * s, 0, 0.4 * s);
+                        return new THREE.ExtrudeGeometry(shape, { depth: 0.5 * s, bevelEnabled: true, bevelSegments: 5, steps: 2, bevelSize: 0.16 * s, bevelThickness: 0.2 * s });
+                    }
+                    const heartGeo = createHeartGeometry(1.15); heartGeo.center();
+                    const heartMat = new THREE.MeshPhysicalMaterial({ color: 0xff0044, emissive: 0x4a0018, roughness: 0.15, metalness: 0.25, clearcoat: 1.0, clearcoatRoughness: 0.1 });
+                    const heart = new THREE.Mesh(heartGeo, heartMat);
+                    const heartPos = new THREE.Vector3(2.5, 5.5, 0); heart.position.copy(heartPos); scene.add(heart); heartLight.position.copy(heartPos);
+
+                    const ring1Geo = new THREE.TorusGeometry(2.1, 0.035, 16, 80); const ringMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
+                    const ring1 = new THREE.Mesh(ring1Geo, ringMat); ring1.position.copy(heartPos); scene.add(ring1);
+                    const ring2Geo = new THREE.TorusGeometry(2.4, 0.025, 16, 80); const ring2Mat = new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.6 });
+                    const ring2 = new THREE.Mesh(ring2Geo, ring2Mat); ring2.position.copy(heartPos); scene.add(ring2);
+
+                    function createArrowMesh() {
+                        const group = new THREE.Group();
+                        const shaftGeo = new THREE.CylinderGeometry(0.035, 0.035, 2.6, 8); shaftGeo.rotateZ(-Math.PI / 2); shaftGeo.translate(1.3, 0, 0);
+                        const shaftMat = new THREE.MeshStandardMaterial({ color: 0xf5deb3, metalness: 0.2, roughness: 0.5 }); const shaft = new THREE.Mesh(shaftGeo, shaftMat); group.add(shaft);
+                        const headGeo = new THREE.ConeGeometry(0.13, 0.45, 10); headGeo.rotateZ(-Math.PI / 2); headGeo.translate(2.6 + 0.225, 0, 0);
+                        const headMat = new THREE.MeshStandardMaterial({ color: 0xff1744, metalness: 0.7, roughness: 0.2 }); const head = new THREE.Mesh(headGeo, headMat); group.add(head);
+                        const fMat = new THREE.MeshBasicMaterial({ color: 0xff4081, side: THREE.DoubleSide }); const featherGeo = new THREE.PlaneGeometry(0.4, 0.14); featherGeo.translate(0.25, 0.07, 0);
+                        for (let i = 0; i < 3; i++) { const feather = new THREE.Mesh(featherGeo, fMat); feather.rotation.x = (i * Math.PI * 2) / 3; group.add(feather); }
+                        return group;
+                    }
+
+                    const bowGroup = new THREE.Group(); const bowPivot = new THREE.Vector3(-4.5, -6.5, 0); bowGroup.position.copy(bowPivot); bowGroup.rotation.z = Math.PI / 4; scene.add(bowGroup);
+                    const bowCurve = new THREE.CatmullRomCurve3([ new THREE.Vector3(-0.4, 2.8, 0), new THREE.Vector3(0.3, 1.8, 0), new THREE.Vector3(0.65, 0, 0), new THREE.Vector3(0.3, -1.8, 0), new THREE.Vector3(-0.4, -2.8, 0) ]);
+                    const bowGeo = new THREE.TubeGeometry(bowCurve, 40, 0.08, 12, false); const bowMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.85 }); const bowMesh = new THREE.Mesh(bowGeo, bowMat); bowGroup.add(bowMesh);
+                    const stringGeo = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(-0.4, 2.8, 0), new THREE.Vector3(-0.4, 0, 0), new THREE.Vector3(-0.4, -2.8, 0) ]); const stringMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }); const bowString = new THREE.Line(stringGeo, stringMat); bowGroup.add(bowString);
+                    const previewArrow = createArrowMesh(); previewArrow.position.set(-0.4, 0, 0); bowGroup.add(previewArrow);
+                    const trajCount = 20; const trajPoints = []; for (let i = 0; i < trajCount; i++) trajPoints.push(new THREE.Vector3()); const trajGeo = new THREE.BufferGeometry().setFromPoints(trajPoints); const trajMat = new THREE.PointsMaterial({ color: 0xff69b4, size: 0.12, transparent: true, opacity: 0.75 }); const trajLine = new THREE.Points(trajGeo, trajMat); trajLine.visible = false; scene.add(trajLine);
+
+                    function createTextTexture(text, color, glowColor) {
+                        const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128; const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.font = 'bold italic 48px \'Playfair Display\', serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.shadowColor = glowColor; ctx.shadowBlur = 18; ctx.fillStyle = color; ctx.fillText(text, 256, 64);
+                        ctx.fillStyle = '#ffffff'; ctx.font = 'bold italic 46px \'Playfair Display\', serif'; ctx.fillText(text, 256, 64);
+                        return new THREE.CanvasTexture(canvas);
+                    }
+                    const textTextures = [ createTextTexture('❤ I LOVE YOU ❤', '#ff1493', '#ff007f'), createTextTexture('I LOVE YOU', '#ffd700', '#ff69b4'), createTextTexture('FOREVER ❤', '#ff2d55', '#ff4081'), createTextTexture('MY LOVE ✦', '#00f5d4', '#00bbf9') ];
+
+                    let activeArrows = [], trailParticles = [], flyingTexts = [], miniHearts = [], heartStreamers = [], shockwaves = [];
+                    const miniHeartGeo = createHeartGeometry(0.25); miniHeartGeo.center();
+                    let heartScaleBounce = 1.0;
+                    let hasTriggeredNextScene = false;
+
+                    function triggerLoveExplosion(pos) {
+                        const textCount = 14;
+                        for (let i = 0; i < textCount; i++) {
+                            const tex = textTextures[Math.floor(Math.random() * textTextures.length)];
+                            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 1, blending: THREE.AdditiveBlending });
+                            const sprite = new THREE.Sprite(mat); sprite.position.copy(pos); sprite.scale.set(3.2, 0.8, 1);
+                            const angle = (i / textCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4; const speed = 3.5 + Math.random() * 6.0;
+                            sprite.velocity = new THREE.Vector3(Math.cos(angle) * speed, Math.sin(angle) * speed + 2.0, (Math.random() - 0.5) * 4);
+                            sprite.life = 1.0; sprite.rotSpeed = (Math.random() - 0.5) * 1.5; scene.add(sprite); flyingTexts.push(sprite);
+                        }
+                        const heartBurstCount = 35;
+                        for (let i = 0; i < heartBurstCount; i++) {
+                            const mMat = new THREE.MeshStandardMaterial({ color: Math.random() > 0.4 ? 0xff0055 : 0xff69b4, emissive: 0x440011, roughness: 0.2, metalness: 0.5 });
+                            const mMesh = new THREE.Mesh(miniHeartGeo, mMat); mMesh.position.copy(pos);
+                            const speed = 4 + Math.random() * 8; const theta = Math.random() * Math.PI * 2; const phi = Math.random() * Math.PI;
+                            mMesh.velocity = new THREE.Vector3(speed * Math.sin(phi) * Math.cos(theta), speed * Math.sin(phi) * Math.sin(theta), speed * Math.cos(phi));
+                            mMesh.rotSpeed = new THREE.Vector3(Math.random() * 8, Math.random() * 8, Math.random() * 8); mMesh.life = 1.0; scene.add(mMesh); miniHearts.push(mMesh);
+                        }
+                        const streamerCount = 75;
+                        for (let i = 0; i < streamerCount; i++) {
+                            const streamer = new THREE.Mesh(miniHeartGeo, new THREE.MeshBasicMaterial({ color: Math.random() > 0.3 ? 0xff3366 : 0xffd700, transparent: true, opacity: 0.95 }));
+                            streamer.position.set(pos.x + (Math.random() - 0.5) * 18, 12.5 + Math.random() * 5, pos.z + (Math.random() - 0.5) * 8); streamer.scale.set(0.6, 0.6, 0.6);
+                            streamer.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.8, -(2.0 + Math.random() * 3.0), (Math.random() - 0.5) * 0.8);
+                            streamer.swaySpeed = 2 + Math.random() * 3; streamer.swayOffset = Math.random() * Math.PI * 2; streamer.rotSpeed = new THREE.Vector3(Math.random() * 4, Math.random() * 4, Math.random() * 4);
+                            scene.add(streamer); heartStreamers.push(streamer);
+                        }
+                        const shockGeo = new THREE.RingGeometry(0.2, 0.5, 36);
+                        const shockMesh = new THREE.Mesh(shockGeo, new THREE.MeshBasicMaterial({ color: 0xff1493, side: THREE.DoubleSide, transparent: true, opacity: 1 })); shockMesh.position.copy(pos); scene.add(shockMesh);
+                        shockwaves.push({ mesh: shockMesh, scale: 1, opacity: 1 });
+                        heartScaleBounce = 1.6;
+
+                        if (!hasTriggeredNextScene) {
+                            hasTriggeredNextScene = true;
+                            setTimeout(() => {
+                                window.parent.postMessage('bow_hit', '*');
+                            }, 2000); 
+                        }
+                    }
+
+                    const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+                    let isPulling = false; let dragStart = new THREE.Vector3(); let currentPull = 0; let pullAngle = 0; const maxPull = 2.4; const baseBowRotation = Math.PI / 4;
+
+                    function getWorldPos(clientX, clientY) { mouse.x = (clientX / window.innerWidth) * 2 - 1; mouse.y = -(clientY / window.innerHeight) * 2 + 1; raycaster.setFromCamera(mouse, camera); const hit = new THREE.Vector3(); raycaster.ray.intersectPlane(planeZ, hit); return hit; }
+                    function handleStart(clientX, clientY) { isPulling = true; dragStart = getWorldPos(clientX, clientY); updateAim(clientX, clientY); }
+                    function handleMove(clientX, clientY) { if (isPulling) updateAim(clientX, clientY); }
+                    function handleEnd() { if (isPulling) { if (currentPull > 0.4) shootArrow(); else resetBow(); isPulling = false; trajLine.visible = false; } }
+                    
+                    window.addEventListener('mousedown', (e) => { if (e.button === 0) handleStart(e.clientX, e.clientY); });
+                    window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+                    window.addEventListener('mouseup', (e) => { if (e.button === 0) handleEnd(); });
+                    window.addEventListener('touchstart', (e) => { if (e.touches.length > 0) handleStart(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+                    window.addEventListener('touchmove', (e) => { if (e.touches.length > 0) handleMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+                    window.addEventListener('touchend', () => handleEnd());
+
+                    function updateAim(clientX, clientY) {
+                        const currentPos = getWorldPos(clientX, clientY); const dragDelta = new THREE.Vector3().subVectors(dragStart, currentPos);
+                        currentPull = Math.min(Math.max(dragDelta.length(), 0), maxPull);
+                        const rawAngle = Math.atan2(dragDelta.y, dragDelta.x);
+                        let targetAngle = Math.max(0, Math.min(Math.PI / 2.5, rawAngle));
+                        pullAngle = targetAngle; bowGroup.rotation.z = baseBowRotation + pullAngle;
+                        const pullBackX = -0.4 - currentPull * 0.8; previewArrow.position.set(pullBackX, 0, 0);
+                        const posAttr = bowString.geometry.attributes.position; posAttr.setXYZ(1, pullBackX, 0, 0); posAttr.needsUpdate = true;
+                        trajLine.visible = true;
+                        const shootDir = new THREE.Vector3(Math.cos(bowGroup.rotation.z), Math.sin(bowGroup.rotation.z), 0).normalize(); const launchSpeed = currentPull * 17.5;
+                        const simPos = bowPivot.clone().add(new THREE.Vector3(0.5 * Math.cos(bowGroup.rotation.z), 0.5 * Math.sin(bowGroup.rotation.z), 0)); const simVel = shootDir.clone().multiplyScalar(launchSpeed);
+                        const trajAttr = trajGeo.attributes.position;
+                        for (let i = 0; i < trajCount; i++) { trajAttr.setXYZ(i, simPos.x, simPos.y, simPos.z); simPos.addScaledVector(simVel, 0.04); simVel.y -= 9.8 * 0.04 * 0.35; }
+                        trajAttr.needsUpdate = true;
+                    }
+                    function resetBow() { previewArrow.position.set(-0.4, 0, 0); const posAttr = bowString.geometry.attributes.position; posAttr.setXYZ(1, -0.4, 0, 0); posAttr.needsUpdate = true; bowGroup.rotation.z = baseBowRotation; }
+                    function shootArrow() {
+                        const arrow = createArrowMesh(); arrow.position.copy(bowPivot);
+                        const shootDir = new THREE.Vector3(Math.cos(bowGroup.rotation.z), Math.sin(bowGroup.rotation.z), 0).normalize(); const speed = currentPull * 18.0;
+                        arrow.velocity = shootDir.clone().multiplyScalar(speed); arrow.gravity = 9.8 * 0.35;
+                        arrow.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), shootDir);
+                        scene.add(arrow); activeArrows.push(arrow); resetBow();
+                    }
+
+                    const clock = new THREE.Clock();
+                    function animate() {
+                        requestAnimationFrame(animate); const dt = Math.min(clock.getDelta(), 0.1); const time = clock.getElapsedTime();
+                        heart.rotation.y = time * 1.5; ring1.rotation.x = time * 1.2; ring1.rotation.y = time * 0.8; ring2.rotation.z = -time * 0.9; ring2.rotation.x = time * 0.6;
+                        if (heartScaleBounce > 1.0) { heartScaleBounce -= dt * 2.2; if (heartScaleBounce < 1.0) heartScaleBounce = 1.0; }
+                        heart.scale.set(heartScaleBounce, heartScaleBounce, heartScaleBounce);
+
+                        for (let i = activeArrows.length - 1; i >= 0; i--) {
+                            const arr = activeArrows[i]; arr.velocity.y -= arr.gravity * dt; arr.position.addScaledVector(arr.velocity, dt);
+                            const dir = arr.velocity.clone().normalize(); arr.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
+                            if (Math.random() > 0.3) {
+                                const spark = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.9 }));
+                                spark.position.copy(arr.position); spark.life = 0.45; scene.add(spark); trailParticles.push(spark);
+                            }
+                            const tipPos = arr.position.clone().addScaledVector(dir, 2.9);
+                            if (tipPos.distanceTo(heart.position) < 1.8) { triggerLoveExplosion(heart.position); scene.remove(arr); activeArrows.splice(i, 1); continue; }
+                            if (arr.position.x > 22 || arr.position.y > 22 || arr.position.y < -22) { scene.remove(arr); activeArrows.splice(i, 1); }
+                        }
+                        for (let i = trailParticles.length - 1; i >= 0; i--) { const p = trailParticles[i]; p.life -= dt * 2.2; p.material.opacity = p.life; if (p.life <= 0) { scene.remove(p); trailParticles.splice(i, 1); } }
+                        for (let i = flyingTexts.length - 1; i >= 0; i--) {
+                            const t = flyingTexts[i]; t.position.addScaledVector(t.velocity, dt); t.velocity.y += 0.8 * dt; t.material.rotation += t.rotSpeed * dt; t.life -= dt * 0.45; t.material.opacity = Math.max(0, t.life); t.scale.multiplyScalar(1.0 + dt * 0.2);
+                            if (t.life <= 0) { scene.remove(t); flyingTexts.splice(i, 1); }
+                        }
+                        for (let i = miniHearts.length - 1; i >= 0; i--) {
+                            const h = miniHearts[i]; h.velocity.y -= 9.8 * 0.35 * dt; h.position.addScaledVector(h.velocity, dt); h.rotation.x += h.rotSpeed.x * dt; h.rotation.y += h.rotSpeed.y * dt; h.life -= dt * 0.55; h.scale.multiplyScalar(0.98);
+                            if (h.life <= 0) { scene.remove(h); miniHearts.splice(i, 1); }
+                        }
+                        for (let i = heartStreamers.length - 1; i >= 0; i--) {
+                            const s = heartStreamers[i]; s.position.addScaledVector(s.velocity, dt); s.position.x += Math.sin(time * s.swaySpeed + s.swayOffset) * 0.04; s.rotation.x += s.rotSpeed.x * dt; s.rotation.y += s.rotSpeed.y * dt; s.rotation.z += s.rotSpeed.z * dt;
+                            if (s.position.y < -12) { scene.remove(s); heartStreamers.splice(i, 1); }
+                        }
+                        for (let i = shockwaves.length - 1; i >= 0; i--) {
+                            const sw = shockwaves[i]; sw.scale += dt * 12; sw.mesh.scale.set(sw.scale, sw.scale, 1); sw.opacity -= dt * 2.2; sw.mesh.material.opacity = Math.max(0, sw.opacity);
+                            if (sw.opacity <= 0) { scene.remove(sw.mesh); shockwaves.splice(i, 1); }
+                        }
+                        renderer.render(scene, camera);
+                    }
+                    animate();
+                    window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+                </script>
+            </body>
+            </html>
+        "></iframe>
+    </div>
+
+    <!-- MÀN 2: Trái tim I LOVE YOU & Ảnh -->
+    <div id="scene2" class="scene">
+        <iframe id="iframe-heart" class="scene-iframe" srcdoc='
+            <!DOCTYPE html>
+            <html lang="vi">
+            <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <style>
+              html,body{margin:0; padding:0; background:#03030c; overflow:hidden; width:100vw; height:100vh; display:flex; justify-content:center; align-items:center;}
+              canvas{display:block; max-width:100vw; max-height:100vh; width:auto; height:auto; object-fit:contain;}
+            </style>
+            </head>
+            <body>
+            <canvas id="cv"></canvas>
+            <script>
+            const WIDTH = 800, HEIGHT = 1200;
+            const cv = document.getElementById("cv"); cv.width = WIDTH; cv.height = HEIGHT;
+            const ctx = cv.getContext("2d");
+            const COLOR_PRESETS = [ ["CYBER NEON 💖", [255,70,160], [180,50,255], [255,210,80], [0,240,255]], ["DEEP OCEAN 💙", [0,150,255], [0,255,230], [140,80,255], [0,100,255]], ["FOREST AURA 💚", [0,255,150], [150,255,0], [255,215,0], [50,250,250]], ["SUNSET GLOW ❤️", [255,60,60], [255,120,0], [255,80,160], [255,230,100]], ["COSMIC STARLIGHT 🌌", [255,215,0], [240,240,255], [70,150,255], [200,240,255]], ["RAINBOW FANTASY 🌈", null, null, null, null] ];
+            let currentPresetIdx = 0;
+            const SPACE_VOID = [3,3,12]; const WHITE = [255,255,255];
+            const rgb = (c, a=1) => `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+            const lerp = (a,b,t) => a + (b-a)*t; const lerpColor = (c1,c2,t) => [lerp(c1[0],c2[0],t), lerp(c1[1],c2[1],t), lerp(c1[2],c2[2],t)]; const rand = (a,b) => a + Math.random()*(b-a);
+
+            const RAW_IMAGE_URL = "https://raw.githubusercontent.com/hhhh22022010-ops/Tdung/main/IMG_20261019_082221.jpg";
+            const IMAGE_URL = "https://images.weserv.nl/?url=" + encodeURIComponent(RAW_IMAGE_URL) + "&output=jpg";
+            let coupleImage = null; let coupleMaskReady = false;
+            function loadCoupleImage(url){
+              const img = new Image(); img.crossOrigin = "anonymous";
+              img.onload = () => {
+                const off = document.createElement("canvas"); const targetW = 300; const targetH = 400;
+                off.width = targetW; off.height = targetH; const octx = off.getContext("2d");
+                const imgRatio = img.naturalWidth / img.naturalHeight; const targetRatio = targetW / targetH; let sx, sy, sWidth, sHeight;
+                if (imgRatio > targetRatio) { sHeight = img.naturalHeight; sWidth = sHeight * targetRatio; sx = (img.naturalWidth - sWidth) / 2; sy = 0; } else { sWidth = img.naturalWidth; sHeight = sWidth / targetRatio; sx = 0; sy = (img.naturalHeight - sHeight) / 3; }
+                octx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH); coupleImage = off; coupleMaskReady = true;
+              };
+              img.src = url;
+            }
+            loadCoupleImage(IMAGE_URL);
+
+            function renderGlowingImage(baseImage, color, alpha, scale) {
+              if(!baseImage) return;
+              const cw = baseImage.width; const ch = baseImage.height; const scaledW = Math.round(cw * scale); const scaledH = Math.round(ch * scale);
+              const tempCanvas = document.createElement("canvas"); tempCanvas.width = scaledW + 40; tempCanvas.height = scaledH + 40; const tCtx = tempCanvas.getContext("2d");
+              const drawX = 20; const drawY = 20; const radius = 20;
+              tCtx.shadowColor = rgb(color); tCtx.shadowBlur = 25; tCtx.fillStyle = rgb(color);
+              tCtx.beginPath(); tCtx.roundRect(drawX - 3, drawY - 3, scaledW + 6, scaledH + 6, radius + 3); tCtx.fill();
+              tCtx.shadowBlur = 0; tCtx.beginPath(); tCtx.roundRect(drawX, drawY, scaledW, scaledH, radius); tCtx.clip();
+              tCtx.drawImage(baseImage, drawX, drawY, scaledW, scaledH);
+              ctx.globalAlpha = alpha; ctx.drawImage(tempCanvas, CENTER_X - tempCanvas.width / 2, CENTER_Y - tempCanvas.height / 2); ctx.globalAlpha = 1;
+            }
+            if (!CanvasRenderingContext2D.prototype.roundRect) { CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) { if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2; this.beginPath(); this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r); this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r); this.closePath(); return this; }; }
+
+            function getHeartXY(t, scale=19.5){ const x = 16*Math.pow(Math.sin(t),3); const y = -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t)); return [x*scale, y*scale]; }
+            const fontPhrase = "bold 12px Arial Black, Arial, sans-serif"; const fontMiniHeart = "18px Segoe UI Symbol, Arial, sans-serif";
+
+            class HorizontalLoveText{
+              constructor(t, idx, total, text="I LOVE YOU", isOuter=true){ this.t=t; this.idx=idx; this.total=total; this.text=text; this.isOuter=isOuter; this.scaleMult = isOuter?1.0:0.91; this.alpha=0.0; this.flowSpeed = isOuter?0.0045:-0.0035; this.heartbeatScale=1.0; }
+              update(heartbeatScale, drawProgress, isLooping){ if(!isLooping){ if(this.idx <= drawProgress) this.alpha = Math.min(255, this.alpha+15.0); else this.alpha=0.0; } else { this.t = (this.t + this.flowSpeed) % (2*Math.PI); this.alpha = 255.0; } this.heartbeatScale = heartbeatScale; }
+              draw(cx, cy, color){ if(this.alpha <= 5) return; const [bx,by] = getHeartXY(this.t, 21*this.scaleMult); const px = cx + bx*this.heartbeatScale; const py = cy + by*this.heartbeatScale; ctx.font = fontPhrase; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillStyle = rgb(color, this.alpha/255); ctx.fillText(this.text, px, py); }
+            }
+            class FloatingHeartParticle{
+              constructor(cx,cy){ this.cx=cx; this.cy=cy; this.reset(); }
+              reset(){ this.x = this.cx + rand(-300,300); this.y = this.cy + rand(180,480); this.vy = -rand(1.5,3.0); this.phase = rand(0, Math.PI*2); this.alpha = Math.floor(rand(150,246)); const chars = ["❤","♥","❥","•"]; this.char = chars[Math.floor(Math.random()*chars.length)]; }
+              update(){ this.y += this.vy; this.phase += 0.04; this.x += Math.sin(this.phase)*0.9; this.alpha -= 1.0; if(this.alpha <= 0 || this.y < this.cy - 500) this.reset(); }
+              draw(color){ if(this.alpha > 0){ ctx.font = fontMiniHeart; ctx.textAlign="left"; ctx.textBaseline="top"; ctx.fillStyle = rgb(color, Math.max(0,this.alpha)/255); ctx.fillText(this.char, this.x, this.y); } }
+            }
+            class ShootingStar{
+              constructor(){ this.reset(); }
+              reset(){ this.x = Math.floor(rand(200, WIDTH+100)); this.y = Math.floor(rand(-100,200)); const ang = rand(135*Math.PI/180, 155*Math.PI/180); const spd = rand(15,22); this.vx = Math.cos(ang)*spd; this.vy = Math.sin(ang)*spd; this.length = rand(90,150); this.active = false; this.waitTime = rand(0.1,1.4); }
+              update(dt){ if(!this.active){ this.waitTime -= dt; if(this.waitTime <= 0) this.active = true; } else { this.x += this.vx; this.y += this.vy; if(this.x < -200 || this.y > HEIGHT+100) this.reset(); } }
+              draw(tailColor){ if(this.active){ const tailX = this.x - this.vx*(this.length/15); const tailY = this.y - this.vy*(this.length/15); ctx.strokeStyle = rgb(tailColor, 1); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(this.x,this.y); ctx.lineTo(tailX,tailY); ctx.stroke(); ctx.fillStyle = rgb(WHITE,1); ctx.beginPath(); ctx.arc(this.x,this.y,2.5,0,Math.PI*2); ctx.fill(); } }
+            }
+
+            const CENTER_X = Math.floor(WIDTH/2); const CENTER_Y = Math.floor(HEIGHT/2);
+            const TOTAL_PAIRS = 54; const lovePhrases = [];
+            for(let i=0;i<TOTAL_PAIRS;i++){ const tVal = (i/TOTAL_PAIRS)*2*Math.PI; lovePhrases.push(new HorizontalLoveText(tVal, i, TOTAL_PAIRS, "I LOVE YOU", true)); const tInner = (tVal + Math.PI/TOTAL_PAIRS) % (2*Math.PI); lovePhrases.push(new HorizontalLoveText(tInner, i, TOTAL_PAIRS, "❤ I LOVE YOU ❤", false)); }
+            const floatingHearts = []; for(let i=0;i<100;i++) floatingHearts.push(new FloatingHeartParticle(CENTER_X, CENTER_Y));
+            const shootingStars = []; for(let i=0;i<6;i++) shootingStars.push(new ShootingStar());
+            const bgStars = []; for(let i=0;i<250;i++){ bgStars.push([Math.floor(Math.random()*WIDTH), Math.floor(Math.random()*HEIGHT), rand(0.6,2.2)]); }
+
+            let drawProgress = 0.0; let isLooping = false; let coupleAlpha = 0.0; let running = true; let lastTime = performance.now(); let startTime = lastTime;
+
+            function loop(now){
+              if(!running) return; requestAnimationFrame(loop);
+              const dt = Math.min(0.05, (now - lastTime)/1000); lastTime = now; const currentTime = (now - startTime)/1000;
+              const preset = COLOR_PRESETS[currentPresetIdx]; let col1 = preset[1], col2 = preset[2], col3 = preset[3], meteorCol = preset[4];
+              if(col1 === null){ const h1 = (currentTime*50)%360; const h2 = (currentTime*50+120)%360; const h3 = (currentTime*50+240)%360; col1 = hslToRgb(h1/360, 0.9, 0.5); col2 = hslToRgb(h2/360, 0.9, 0.5); col3 = hslToRgb(h3/360, 0.9, 0.5); meteorCol = col1; }
+              ctx.fillStyle = rgb(SPACE_VOID,1); ctx.fillRect(0,0,WIDTH,HEIGHT);
+              for(const [sx,sy,sr] of bgStars){ ctx.fillStyle = "rgb(170,190,230)"; ctx.beginPath(); ctx.arc(sx,sy,Math.max(1,Math.round(sr)),0,Math.PI*2); ctx.fill(); }
+              for(const ss of shootingStars){ ss.update(dt); ss.draw(meteorCol); }
+              const tCycle = currentTime % 1.1; let beatVal = 0; if(tCycle < 0.18) beatVal = Math.sin((tCycle/0.18)*Math.PI)*0.08; else if(tCycle >= 0.22 && tCycle < 0.40) beatVal = Math.sin(((tCycle-0.22)/0.18)*Math.PI)*0.04; const heartbeatScale = 1.0 + beatVal;
+              for(const fh of floatingHearts){ fh.update(); fh.draw(col2); }
+              if(!isLooping){ drawProgress += 20.0*dt; if(drawProgress >= TOTAL_PAIRS) isLooping = true; }
+              if(drawProgress > TOTAL_PAIRS*0.5 || isLooping){ coupleAlpha = Math.min(255, coupleAlpha + 140.0*dt); }
+              if(coupleAlpha > 0 && coupleMaskReady && coupleImage){ const activeColor = [ Math.min(255, Math.floor(col2[0]*0.8 + 50)), Math.min(255, Math.floor(col2[1]*0.8 + 50)), Math.min(255, Math.floor(col2[2]*0.8 + 50)) ]; const imgScale = 0.9 * heartbeatScale; renderGlowingImage(coupleImage, activeColor, coupleAlpha/255, imgScale); }
+              for(const phrase of lovePhrases){ phrase.update(heartbeatScale, drawProgress, isLooping); const colorPhase = (phrase.t + currentTime*1.5) % (Math.PI*2); let col; if(colorPhase < Math.PI){ const ratio = colorPhase/Math.PI; col = lerpColor(col1, col2, ratio); } else { const ratio = (colorPhase - Math.PI)/Math.PI; col = lerpColor(col2, col3, ratio); } phrase.draw(CENTER_X, CENTER_Y, col); }
+            }
+            function hslToRgb(h,s,l){ let r,g,b; if(s===0){ r=g=b=l; } else{ const hue2rgb=(p,q,t)=>{ if(t<0)t+=1; if(t>1)t-=1; if(t<1/6) return p+(q-p)*6*t; if(t<1/2) return q; if(t<2/3) return p+(q-p)*(2/3-t)*6; return p; }; const q = l<0.5 ? l*(1+s) : l+s-l*s; const p = 2*l - q; r = hue2rgb(p,q,h+1/3); g = hue2rgb(p,q,h); b = hue2rgb(p,q,h-1/3); } return [Math.round(r*255), Math.round(g*255), Math.round(b*255)]; }
+            requestAnimationFrame(loop);
+            </script>
+            </body>
+            </html>
+        '></iframe>
+    </div>
+
+    <!-- MÀN 3: CHẠY CHỮ LỜI BÀI HÁT (LYRIC VIDEO) -->
+    <div id="scene3" class="scene">
+        <div class="lyric-container" id="lyric-container">
+            <!-- Chữ sẽ được JS chèn vào đây -->
+        </div>
+    </div>
+
+    <!-- MÀN 4: Hoa hồng phát sáng -->
+    <div id="scene4" class="scene">
+        <iframe id="iframe-rose" class="scene-iframe" srcdoc='
+            <!DOCTYPE html>
+            <html lang="vi">
+            <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <style>
+              html,body{margin:0; padding:0; background:#06050e; overflow:hidden; width:100vw; height:100vh; display:flex; justify-content:center; align-items:center;}
+              canvas{display:block; max-width:100vw; max-height:100vh; width:auto; height:auto; object-fit:contain;}
+            </style>
+            </head>
+            <body>
+            <canvas id="cv"></canvas>
+            <script>
+            const WIDTH = 800, HEIGHT = 1400;
+            const cv = document.getElementById("cv"); cv.width = WIDTH; cv.height = HEIGHT;
+            const ctx = cv.getContext("2d");
+            const SPACE_BG = [6,5,14]; const OUTLINE_ROSE = [255,230,240]; const PETAL_BASE = [255,77,128]; const OUTLINE_GREEN = [180,255,120]; const LEAF_BASE = [118,215,47]; const STAR_GOLD = [255,215,30]; const HEART_PINK = [255,95,145]; const TEXT_LILAC = [196,184,232];
+            const PALETTE = [OUTLINE_ROSE, PETAL_BASE, OUTLINE_GREEN, LEAF_BASE, STAR_GOLD, HEART_PINK, TEXT_LILAC];
+            const COLOR_INDEX = {}; PALETTE.forEach((c,i)=>COLOR_INDEX[c.toString()] = i);
+            
+            const SVG_SRC = `<svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="736.000000pt" height="736.000000pt" viewBox="0 0 736.000000 736.000000" preserveAspectRatio="xMidYMid meet"><g transform="translate(0.000000,736.000000) scale(0.100000,-0.100000)" fill="#000000" stroke="none">
+<path d="M3713 6531 c-64 -18 -171 -65 -229 -101 -16 -10 -30 -9 -74 5 -37 12 -103 19 -200 22 -128 5 -157 3 -235 -17 -165 -40 -313 -128 -392 -232 -78 -102 -103 -171 -112 -306 l-6 -104 -71 -22 c-269 -86 -446 -340 -406 -584 21 -128 118 -273 235 -352 48 -32 62 -71 98 -254 33 -171 57 -252 107 -351 123 -248 324 -420 607 -519 18 -7 18 -8 -6 -24 -14 -9 -73 -59 -132 -111 -94 -82 -107 -97 -107 -126 0 -18 8 -38 18 -47 20 -17 218 -48 310 -48 84 0 202 25 278 60 l62 28 7 -67 c8 -79 34 -149 71 -198 27 -35 27 -36 20 -151 -3 -64 -8 -118 -11 -120 -3 -3 -28 -13 -57 -23 -30 -10 -61 -28 -72 -43 -33 -43 -3 -82 127 -169 12 -9 21 -39 32 -107 8 -52 26 -151 40 -219 34 -167 55 -334 55 -437 0 -96 -26 -293 -45 -339 l-12 -30 -36 72 c-37 72 -37 74 -37 196 0 447 -204 793 -579 982 -160 81 -413 135 -624 135 -212 -1 -308 -28 -330 -94 -13 -39 -4 -62 54 -141 57 -79 100 -160 184 -350 121 -276 221 -418 373 -533 157 -118 328 -186 571 -228 204 -35 247 -64 298 -204 39 -106 39 -109 -28 -237 -33 -64 -62 -135 -66 -158 -13 -99 83 -178 214 -178 79 1 125 27 157 92 59 116 131 311 175 476 l27 100 66 35 c93 49 110 66 106 109 -3 33 -9 39 -68 71 l-65 35 -3 63 c-3 54 1 70 29 123 59 110 113 138 302 159 164 17 270 47 397 110 190 95 337 243 434 437 50 99 79 180 131 370 43 155 85 258 150 373 72 128 -16 186 -245 160 -422 -48 -801 -242 -997 -511 -135 -184 -231 -468 -234 -689 0 -36 -4 -73 -7 -82 -9 -21 -85 298 -109 452 -20 132 -22 412 -4 540 15 105 47 240 60 253 4 4 36 -1 69 -12 76 -26 211 -28 309 -5 46 11 91 14 139 10 54 -4 75 -2 92 10 48 33 17 120 -72 201 l-54 50 73 52 c40 29 106 86 145 127 55 57 93 85 161 120 123 64 281 170 360 242 278 256 338 650 140 912 -23 30 -39 59 -37 65 67 148 87 228 87 355 0 121 -16 195 -64 284 -96 181 -330 306 -574 306 l-79 0 -74 76 c-113 114 -233 188 -387 240 -109 37 -322 44 -430 15z m307 -75 c41 -8 106 -25 143 -39 241 -88 470 -329 522 -549 20 -84 18 -101 -4 -56 -11 21 -17 46 -15 55 3 11 -12 40 -36 71 -22 29 -40 54 -40 57 0 2 -11 21 -25 41 -14 20 -22 40 -19 45 3 5 1 8 -4 7 -5 -2 -32 23 -62 55 -29 32 -61 62 -72 68 -18 10 -18 9 -3 -27 8 -20 15 -38 15 -40 0 -2 7 -4 15 -4 18 0 19 -9 1 -32 -20 -27 -36 -22 -43 13 -3 17 -13 33 -22 36 -29 11 -39 23 -34 43 3 11 14 20 24 20 25 0 24 8 -3 32 -45 39 -144 90 -233 121 -79 27 -103 31 -205 31 -134 1 -210 -19 -326 -83 -77 -43 -206 -162 -249 -228 -16 -26 -35 -43 -46 -43 -11 0 -19 -2 -19 -4 0 -2 -3 -12 -7 -22 -4 -11 -3 -15 5 -10 23 14 21 -13 -3 -38 -22 -24 -25 -25 -25 -8 0 10 9 44 19 74 60 175 225 326 429 392 110 37 205 43 322 22z m-677 -98 c26 -5 45 -14 41 -19 -3 -5 -10 -6 -16 -3 -6 4 -8 2 -5 -3 4 -6 0 -16 -8 -23 -12 -10 -18 -10 -32 1 -14 12 -15 12 -9 1 7 -11 4 -12 -12 -3 -30 16 -150 14 -240 -5 -94 -19 -166 -54 -210 -102 -44 -49 -91 -152 -98 -216 -5 -39 -10 -53 -23 -53 -9 0 -19 4 -22 9 -3 5 -9 2 -12 -7 -5 -10 -3 -14 5 -9 7 5 8 3 4 -5 -5 -7 -13 -10 -20 -8 -7 3 -11 -9 -12 -33 -1 -31 1 -37 14 -33 10 4 13 2 8 -5 -4 -7 -2 -10 6 -7 9 4 14 -3 16 -20 2 -31 23 -72 70 -139 64 -91 76 -106 86 -106 6 0 35 -29 65 -64 29 -35 105 -111 168 -167 154 -140 249 -249 317 -363 48 -79 45 -89 -7 -27 -23 27 -61 64 -82 82 -63 50 -222 151 -320 204 -295 157 -444 348 -462 590 -11 150 31 260 137 365 94 93 226 156 375 179 66 11 204 5 278 -11z m906 -111 c96 -48 92 -60 -15 -53 -105 6 -90 2 -98 22 -7 19 19 64 37 64 6 0 41 -15 76 -33z m-258 -158 c112 -32 198 -104 234 -194 l16 -40 -21 24 c-11 13 -24 29 -28 36 -14 23 -144 115 -170 121 -15 3 -49 13 -76 21 -37 12 -72 14 -135 10 -112 -8 -182 -32 -255 -87 -33 -25 -79 -60 -103 -78 l-44 -33 20 39 c31 62 124 137 204 168 121 46 231 50 358 13z m903 -10 c170 -57 305 -198 331 -345 l7 -39 -28 54 c-60 112 -183 222 -297 266 -25 9 -54 26 -63 36 -9 11 -21 19 -25 19 -5 0 -23 9 -41 21 l-33 21 44 -6 c24 -4 71 -16 105 -27z m-1704 -141 c0 -27 59 -137 104 -191 47 -58 60 -83 28 -54 -17 15 -18 15 -19 -3 -2 -26 57 -76 68 -58 4 7 3 19 -4 27 -12 16 29 -12 73 -49 23 -20 23 -20 2 -10 -28 14 -42 6 -35 -21 4 -12 0 -25 -8 -30 -10 -6 -10 -9 -1 -9 6 0 12 -5 12 -11 0 -6 -9 -9 -20 -6 -13 3 -18 1 -13 -6 4 -7 0 -8 -13 -4 -19 7 -19 7 0 -8 10 -8 22 -13 25 -11 3 2 12 -2 19 -10 46 -50 -116 45 -173 101 -28 28 -64 76 -79 107 -25 51 -28 67 -25 131 3 48 10 82 22 100 18 28 37 36 37 15z m1852 -55 c22 -19 23 -36 4 -52 -12 -10 -19 -8 -35 8 -42 42 -13 84 31 44z m-2285 -35 c-3 -8 -6 -5 -6 6 -1 11 2 17 5 13 3 -3 4 -12 1 -19z m1430 3 c0 -11 -5 -18 -9 -15 -4 3 -5 11 -1 19 7 21 12 19 10 -4z m-482 -66 c-22 -8 -44 -14 -50 -14 -18 1 49 28 70 28 11 0 2 -6 -20 -14z m90 5 c-27 -12 -35 -12 -35 0 0 6 12 10 28 9 24 0 25 -1 7 -9z m301 -56 c-10 -38 -91 -120 -144 -145 -60 -30 -149 -50 -175 -40 -17 7 -9 12 48 31 143 47 228 104 256 172 14 35 25 22 15 -18z m1047 -4 c26 -51 21 -218 -7 -249 -11 -12 -29 -21 -40 -19 -20 3 -21 12 -28 143 -4 94 -3 144 5 153 18 22 51 9 70 -28z m-744 -48 c0 -58 -11 -103 -21 -86 -16 29 -18 46 -3 40 11 -4 15 2 15 26 0 30 0 31 -20 13 -11 -10 -18 -20 -15 -23 2 -3 -1 -14 -7 -26 -7 -11 -11 -24 -10 -28 1 -4 -7 -10 -18 -13 -11 -4 -20 -13 -20 -22 0 -11 -3 -13 -13 -5 -9 8 -18 4 -33 -13 -14 -16 -18 -26 -10 -29 6 -2 3 -5 -6 -5 -12 -1 -18 -9 -17 -23 0 -22 1 -22 9 -3 5 11 9 15 9 8 1 -6 3 -18 6 -26 7 -16 -23 -20 -42 -5 -8 7 -24 -2 -50 -27 -33 -32 -35 -36 -14 -30 20 6 23 4 18 -9 -4 -9 -2 -16 3 -16 5 0 7 -7 4 -15 -4 -8 -1 -15 6 -15 6 0 8 4 5 10 -4 6 1 7 12 4 16 -5 16 -4 -1 10 -11 9 -17 18 -14 21 2 3 13 -4 22 -14 17 -19 16 -21 -37 -56 -33 -22 -61 -34 -68 -29 -7 4 -10 3 -5 -4 13 -22 -138 -72 -279 -92 -44 -7 -94 -18 -112 -25 -17 -7 -34 -10 -38 -7 -4 4 -12 0 -18 -9 -14 -18 -90 -59 -109 -59 -7 0 3 14 22 30 36 30 57 39 44 18 -4 -7 -3 -8 5 -4 6 4 9 11 6 16 -6 10 72 56 270 160 268 139 384 233 483 386 15 23 30 40 35 37 4 -2 7 -30 6 -61z m-1909 18 c0 -5 -2 -10 -4 -10 -3 0 -8 5 -11 10 -3 6 -1 10 4 10 6 0 11 -4 11 -10z m-45 -10 c-11 -5 -27 -9 -35 -9 -9 0 -8 4 5 9 11 5 27 9 35 9 9 0 8 -4 -5 -9z m2792 -47 c-3 -10 -5 -2 -5 17 0 19 2 27 5 18 2 -10 2 -26 0 -35z m-2865 16 c-21 -19 -22 -46 -1 -33 5 3 7 10 4 15 -4 5 -2 9 4 9 5 0 11 -3 14 -7 2 -5 2 -3 1 4 -4 17 6 20 41 13 29 -5 28 -6 -35 -37 -71 -35 -102 -60 -139 -112 -20 -28 -22 -37 -13 -52 7 -11 8 -19 3 -19 -5 0 -11 -9 -14 -20 -3 -12 -14 -20 -26 -20 -20 0 -23 -3 -25 -32 -1 -7 -10 -16 -21 -20 -17 -5 -16 -6 6 -7 17 -1 33 -11 43 -26 9 -14 21 -23 25 -20 14 8 32 -21 25 -39 -5 -12 6 -21 45 -38 28 -13 51 -26 51 -29 0 -3 -10 -11 -22 -17 -19 -9 -20 -11 -5 -11 14 -1 17 -6 12 -21 -4 -12 -2 -20 4 -20 7 0 9 -14 5 -39 -5 -31 -2 -42 17 -62 15 -15 25 -38 26 -59 1 -29 0 -32 -10 -18 -10 14 -13 14 -30 -8 -24 -31 -19 -60 11 -57 15 2 22 -3 22 -15 0 -14 2 -14 9 -3 5 8 16 11 26 7 12 -4 16 -2 12 7 -3 8 -1 20 4 28 8 12 10 12 18 -1 7 -10 6 -17 -2 -22 -8 -5 -5 -8 8 -8 16 0 13 -4 -12 -20 -36 -21 -39 -30 -21 -48 16 -16 31 -15 22 1 -6 9 -4 9 8 -1 13 -11 16 -9 16 12 0 23 -3 24 -22 15 -20 -11 -20 -10 -4 7 10 9 37 20 60 24 26 3 42 11 40 18 -3 19 6 14 23 -12 17 -25 10 -60 -9 -49 -6 3 -7 2 -3 -3 5 -5 14 -9 20 -9 15 0 27 -71 14 -84 -6 -6 -1 -14 13 -21 19 -10 22 -9 27 9 3 11 10 18 15 15 6 -4 6 1 -1 13 -7 14 -7 23 1 31 9 9 19 5 40 -15 15 -15 28 -31 28 -35 0 -5 12 -21 26 -36 44 -46 136 -192 191 -302 56 -111 62 -130 38 -110 -8 7 -15 20 -15 30 0 10 -11 38 -25 61 -21 37 -25 40 -25 20 0 -23 -1 -24 -20 -6 -18 17 -19 41 0 30 5 -3 12 0 16 7 4 7 4 10 -1 6 -9 -8 -45 54 -45 77 0 9 -8 19 -17 22 -10 4 -22 11 -26 17 -5 6 -6 1 -2 -11 3 -12 1 -24 -4 -28 -6 -3 -9 8 -7 29 2 29 0 33 -11 24 -11 -8 -12 -7 -7 7 14 36 -45 42 -75 6 -13 -15 -13 -15 -7 2 3 10 2 16 -3 12 -7 -4 -71 49 -71 59 0 7 61 -1 67 -9 5 -4 3 -5 -4 -1 -6 3 -14 2 -17 -3 -4 -5 2 -8 11 -6 10 1 17 8 16 14 -2 6 2 11 8 11 13 0 8 42 -6 47 -6 2 -22 -7 -35 -19 -34 -32 -53 -31 -86 4 -16 17 -23 28 -16 24 18 -10 15 -1 -5 15 -11 10 -14 10 -9 2 14 -24 -5 -13 -72 40 -37 29 -80 61 -95 70 -15 10 -25 23 -21 29 5 7 2 8 -6 3 -7 -4 -15 -4 -19 1 -3 5 -25 22 -48 37 -68 46 -161 151 -191 214 -24 51 -27 69 -26 158 0 89 3 106 28 157 15 31 34 62 42 69 8 6 14 16 14 22 0 20 94 100 165 139 60 33 77 36 47 7z m1158 -116 c0 -7 -39 17 -46 28 -3 6 5 3 20 -6 14 -10 26 -19 26 -22z m825 -22 c-17 -33 -39 -52 -28 -25 5 13 3 15 -8 9 -8 -4 -11 -5 -7 0 4 4 2 15 -5 23 -10 13 -9 14 12 3 20 -11 25 -11 33 3 16 29 19 17 3 -13z m-895 -57 c0 -2 -7 -4 -15 -4 -8 0 -15 4 -15 10 0 5 7 7 15 4 8 -4 15 -8 15 -10z m230 -20 c0 -1 -5 -6 -12 -10 -7 -5 -8 -3 -3 6 6 10 4 12 -11 6 -10 -4 -15 -4 -11 0 4 4 1 14 -6 22 -9 11 -4 11 16 -2 15 -10 27 -20 27 -22z m599 -9 c-41 -45 -48 -45 -12 0 15 19 31 35 36 35 4 0 -7 -16 -24 -35z m788 -61 c10 -27 -14 -66 -40 -62 -17 2 -21 9 -19 27 5 45 45 70 59 35z m-2862 -3 c3 -5 1 -12 -5 -16 -5 -3 -10 1 -10 9 0 18 6 21 15 7z m25 -62 c0 -6 -4 -7 -10 -4 -5 3 -10 11 -10 16 0 6 5 7 10 4 6 -3 10 -11 10 -16z m2889 -53 c-11 -19 -27 -40 -35 -46 -17 -15 -19 -6 -1 12 7 7 20 25 30 41 25 39 30 34 6 -7z m-429 -100 c0 -2 -8 -10 -17 -17 -16 -13 -17 -12 -4 4 13 16 21 21 21 13z m157 -22 c3 -8 0 -27 -6 -41 -9 -21 -14 -23 -26 -13 -12 10 -15 9 -15 -4 0 -10 -4 -15 -9 -12 -5 4 -11 3 -13 -2 -6 -15 -94 -78 -143 -104 -27 -14 -75 -33 -105 -43 -30 -10 -80 -28 -111 -41 -103 -42 -137 -2 -39 46 30 15 78 39 105 52 28 14 100 51 160 82 68 35 119 55 133 53 16 -3 22 1 22 13 0 32 36 43 47 14z m-407 -119 c0 -7 -98 -50 -135 -59 -42 -11 -60 -26 -43 -38 9 -6 5 -7 -10 -3 -16 5 -22 3 -20 -7 2 -8 -5 -12 -21 -10 -13 2 -21 0 -18 -5 4 -6 -24 -20 -61 -33 -90 -32 -307 -130 -412 -187 -127 -68 -252 -157 -329 -234 -73 -72 -208 -264 -203 -288 2 -8 -3 -32 -12 -55 -8 -23 -17 -50 -19 -61 -3 -11 -5 9 -6 45 -3 197 131 402 364 559 131 87 303 164 570 254 206 70 278 96 353 126 1 1 2 -1 2 -4z m839 -65 c0 -9 -4 -8 -9 5 -5 11 -9 27 -9 35 0 9 4 8 9 -5 5 -11 9 -27 9 -35z m-509 -14 c0 -2 -7 -7 -16 -10 -8 -3 -12 -2 -9 4 6 10 25 14 25 6z m519 -63 c0 -36 -2 -43 -9 -27 -7 18 -3 74 6 74 2 0 4 -21 3 -47z m-2698 -5 l23 -33 -27 24 c-15 14 -27 28 -27 33 0 15 8 8 31 -24z m2631 -44 c-2 -10 -10 -32 -17 -49 -15 -33 -18 -135 -4 -135 5 0 6 -7 2 -16 -5 -13 -7 -13 -14 -2 -7 11 -12 11 -30 -1 l-22 -13 20 34 c13 22 20 55 22 96 1 35 6 75 12 89 10 28 36 26 31 -3z m-2581 -21 c13 -16 12 -17 -3 -4 -17 13 -22 21 -14 21 2 0 10 -8 17 -17z m2630 -119 c-5 -16 -10 -21 -10 -12 -1 18 10 51 15 45 2 -1 -1 -16 -5 -33z m-17 -56 c-13 -44 -22 -52 -19 -17 2 18 4 35 4 37 1 1 6 2 12 2 6 0 8 -9 3 -22z m-161 -26 c-2 -10 -13 -24 -24 -30 -19 -12 -19 -12 -4 18 17 33 36 41 28 12z m-2642 -32 c11 -6 19 -21 19 -35 0 -32 64 -224 95 -286 29 -56 32 -78 8 -53 -22 21 -31 0 -11 -24 8 -9 22 -30 32 -47 l18 -30 -20 20 c-68 65 -172 298 -189 421 -5 37 -3 44 11 44 10 0 26 -5 37 -10z m2687 -2 c18 -18 15 -33 -15 -62 -23 -23 -28 -25 -41 -13 -12 12 -12 18 0 38 29 50 37 56 56 37z m70 -43 c-6 -14 -13 -23 -15 -21 -5 5 15 46 22 46 3 0 -1 -11 -7 -25z m-2464 -11 c5 -14 4 -15 -9 -4 -17 14 -19 20 -6 20 5 0 12 -7 15 -16z m2286 -4 c-6 -11 -13 -20 -16 -20 -2 0 0 9 6 20 6 11 13 20 16 20 2 0 0 -9 -6 -20z m39 -24 c14 -17 5 -43 -20 -56 -24 -13 -29 -13 -29 4 0 23 19 66 29 66 4 0 14 -6 20 -14z m81 -50 c0 -3 -4 -8 -10 -11 -5 -3 -10 -1 -10 4 0 6 5 11 10 11 6 0 10 -2 10 -4z m-2128 -271 c9 -20 9 -20 -6 -1 -9 11 -16 27 -15 35 0 14 1 14 6 1 3 -8 10 -24 15 -35z m-333 -135 c7 0 9 -4 6 -10 -3 -5 1 -10 9 -10 9 0 16 -5 16 -10 0 -16 -31 3 -60 37 -17 19 -18 22 -4 10 11 -9 26 -17 33 -17z m81 -73 c13 -9 20 -17 14 -17 -16 0 -54 30 -54 43 0 8 3 9 8 1 4 -5 18 -18 32 -27z m1515 -285 c-5 -4 -11 -13 -13 -21 -3 -13 19 -11 62 5 11 4 32 -9 64 -42 l47 -49 -80 -6 c-44 -4 -100 -12 -125 -18 -58 -14 -201 -15 -180 -1 13 8 13 10 1 10 -11 0 -10 4 5 16 10 8 13 13 7 9 -7 -3 -21 -2 -30 4 -16 8 -14 10 10 16 21 6 31 3 41 -11 13 -17 17 -17 82 11 61 26 65 30 45 39 -22 10 -22 10 11 27 33 17 72 25 53 11z m-1100 -12 c4 -6 -6 -10 -22 -10 -22 0 -25 2 -13 10 19 12 27 12 35 0z m16 -71 c12 -16 23 -20 39 -16 26 7 85 -20 113 -51 18 -20 17 -20 -40 -42 -93 -35 -209 -45 -335 -29 l-107 14 66 55 c36 30 85 69 109 87 44 32 45 32 92 18 25 -8 54 -24 63 -36z m456 -46 c-2 -5 -7 -16 -11 -27 -5 -14 -9 -16 -20 -7 -7 6 -17 7 -21 3 -5 -4 -5 1 -2 10 3 9 1 19 -6 22 -7 2 5 5 26 5 21 1 36 -2 34 -6z m-74 -82 c45 13 49 12 42 -10 -10 -32 12 -33 35 -1 18 25 25 28 53 23 18 -3 37 -10 43 -14 6 -5 14 -6 17 -2 4 3 7 -1 7 -10 0 -9 -35 -54 -77 -101 -43 -46 -85 -94 -94 -107 l-16 -24 -21 35 c-30 48 -45 129 -36 187 4 27 10 41 12 31 2 -13 9 -15 35 -7z m1796 -26 c3 -4 -3 -21 -13 -38 -81 -140 -112 -215 -161 -395 -57 -212 -109 -340 -178 -442 -112 -165 -260 -279 -453 -349 -73 -27 -150 -42 -357 -70 -43 -6 -91 -18 -107 -26 -17 -9 -30 -12 -30 -8 0 19 142 241 211 330 81 104 88 109 224 143 31 7 244 40 262 40 11 0 0 39 -13 44 -18 7 -167 -8 -244 -25 -27 -6 -56 -9 -62 -7 -14 5 197 220 322 330 60 53 73 69 63 79 -10 10 -17 10 -36 0 -48 -25 -155 -112 -247 -199 -52 -49 -96 -87 -98 -83 -2 6 28 114 55 193 6 21 -23 36 -38 21 -19 -19 -57 -137 -70 -218 -10 -61 -19 -88 -41 -115 -59 -72 -216 -277 -246 -320 -17 -25 -45 -61 -61 -80 l-31 -35 4 30 c3 17 7 78 10 136 17 327 194 645 463 827 172 117 438 213 669 242 70 9 192 5 203 -5z m-1635 -534 c8 -153 30 -303 73 -486 14 -60 36 -155 48 -210 36 -154 51 -390 36 -528 -28 -243 -87 -453 -197 -694 -29 -65 -36 -73 -71 -82 -21 -6 -47 -11 -58 -10 -35 0 -89 33 -103 61 -12 26 -8 38 62 180 117 237 173 427 196 655 15 149 1 316 -50 578 -48 250 -60 357 -60 534 l0 140 33 3 c17 2 44 3 58 4 l26 1 7 -146z m-1194 -70 c330 -54 587 -203 732 -423 111 -167 168 -365 168 -575 -1 -80 -2 -86 -16 -68 -8 11 -12 25 -9 33 2 7 1 10 -5 7 -5 -3 -14 5 -21 17 -34 67 -231 309 -315 388 -47 44 -63 68 -82 120 -46 133 -91 201 -117 180 -12 -10 -9 -21 15 -68 16 -31 34 -70 39 -85 l11 -29 -42 32 c-126 95 -288 186 -312 177 -28 -11 -17 -27 45 -65 138 -85 379 -270 379 -292 0 -4 -29 -3 -65 2 -35 5 -104 7 -152 6 -80 -3 -88 -5 -88 -23 0 -18 11 -21 140 -32 215 -18 245 -27 290 -80 120 -144 219 -294 254 -386 7 -19 5 -22 -18 -24 -43 -2 -98 8 -79 16 9 3 -18 7 -60 7 -107 3 -288 51 -415 112 -106 51 -228 140 -293 215 -68 80 -148 213 -206 342 -96 216 -158 334 -210 403 -41 54 -47 67 -36 78 37 36 290 44 468 15z m1020 -36 c0 -25 -2 -45 -5 -45 -9 0 -85 50 -85 56 0 6 61 33 78 34 8 0 12 -15 12 -45z m424 -747 c-24 -62 -34 -80 -34 -60 0 5 -2 17 -5 24 -5 12 47 98 59 98 3 0 -6 -28 -20 -62z m14 -414 c18 -8 32 -19 32 -23 0 -5 -83 -51 -93 -51 -1 0 -1 20 1 45 4 50 12 53 60 29z m-577 -31 c13 -16 12 -17 -3 -4 -17 13 -22 21 -14 21 2 0 10 -8 17 -17z m114 -104 c28 -55 35 -78 29 -102 l-6 -31 -22 55 c-13 30 -25 68 -29 84 -3 17 -9 38 -12 48 -4 9 -4 17 -1 17 3 0 22 -32 41 -71z"/>
+<path d="M3080 5336 c0 -2 8 -10 18 -17 15 -13 16 -12 3 4 -13 16 -21 21 -21 13z"/>
+<path d="M3210 5814 c0 -14 41 -77 46 -72 7 8 -12 53 -30 67 -9 7 -16 10 -16 5z"/>
+<path d="M3380 5636 c0 -2 8 -10 18 -17 15 -13 16 -12 3 4 -13 16 -21 21 -21 13z"/>
+<path d="M3260 5613 c0 -13 29 -38 35 -31 3 3 -4 13 -15 23 -11 10 -20 13 -20 8z"/>
+<path d="M2222 5235 c0 -16 2 -22 5 -12 2 9 2 23 0 30 -3 6 -5 -1 -5 -18z"/>
+<path d="M2296 5112 c15 -10 23 -71 10 -75 -6 -3 -8 -7 -5 -11 3 -3 13 -4 22 0 13 4 14 10 7 24 -6 10 -10 30 -10 44 0 18 -5 26 -17 26 -11 0 -14 -3 -7 -8z"/>
+<path d="M2196 5073 c5 -5 12 -12 16 -18 4 -6 8 -2 8 8 0 9 -7 17 -17 17 -9 0 -12 -3 -7 -7z"/>
+<path d="M2230 5025 c8 -11 25 -30 37 -43 13 -14 20 -29 17 -34 -4 -6 4 -5 16 2 18 9 21 9 15 0 -5 -8 -3 -11 6 -8 21 7 22 32 1 43 -11 6 -39 21 -63 34 -36 19 -41 21 -29 6z"/>
+<path d="M2530 4790 c-8 -5 -12 -12 -9 -15 4 -3 12 1 19 10 14 17 11 19 -10 5z"/>
+<path d="M2520 4740 c0 -5 5 -10 11 -10 5 0 7 5 4 10 -3 6 -8 10 -11 10 -2 0 -4 -4 -4 -10z"/>
+<path d="M5053 2858 c-5 -7 -22 -41 -38 -76 -22 -48 -26 -65 -17 -74 10 -10 16 -8 31 7 24 27 64 123 57 141 -7 17 -21 18 -33 2z"/>
+<path d="M4921 2617 c-11 -18 -31 -43 -45 -56 -31 -29 -34 -61 -7 -61 24 0 111 103 111 131 0 31 -36 23 -59 -14z"/>
+<path d="M2490 2194 c0 -28 79 -134 100 -134 30 0 24 21 -26 88 -44 60 -74 78 -74 46z"/>
+<path d="M2634 2019 c-8 -14 55 -79 77 -79 32 0 30 18 -8 54 -39 37 -57 44 -69 25z"/>
+<path d="M5811 5016 c-6 -8 -21 -47 -32 -87 -11 -41 -29 -88 -40 -106 -26 -41 -84 -92 -121 -105 -32 -11 -51 -39 -42 -61 3 -8 24 -23 47 -33 89 -40 119 -81 152 -209 20 -77 22 -80 49 -80 34 0 38 7 66 103 24 85 68 141 141 177 69 36 75 69 16 97 -85 40 -134 114 -156 233 -6 32 -16 64 -22 71 -15 18 -43 18 -58 0z m48 -196 c21 -57 77 -130 111 -143 12 -5 11 -8 -5 -18 -38 -23 -103 -98 -116 -133 -15 -42 -24 -45 -33 -13 -9 39 -66 115 -102 138 l-35 21 29 18 c42 26 90 88 110 143 9 26 17 47 18 47 1 0 11 -27 23 -60z"/>
+<path d="M1792 4491 c-38 -24 -72 -76 -72 -110 0 -20 -3 -22 -22 -16 -13 4 -47 10 -75 12 -95 9 -153 -51 -153 -156 0 -90 60 -170 168 -225 67 -34 228 -79 257 -72 19 5 31 26 63 109 54 138 65 180 66 262 1 123 -57 204 -153 212 -34 3 -54 -1 -79 -16z m107 -67 c13 -9 29 -32 37 -50 18 -43 18 -49 -1 -34 -12 10 -15 9 -16 -4 -3 -30 -4 -34 -13 -43 -5 -5 -6 -3 -2 5 4 6 3 12 -2 12 -6 0 -8 10 -6 23 4 21 4 21 -6 -2 -11 -26 1 -51 26 -51 8 0 15 -10 16 -22 0 -13 4 -3 8 22 l7 45 1 -45 c0 -25 -3 -54 -7 -65 -7 -17 -9 -16 -15 9 -4 16 -9 26 -11 24 -3 -2 0 -21 6 -43 10 -33 7 -48 -22 -122 -32 -84 -32 -84 -63 -77 -40 8 -68 23 -62 33 3 4 -4 13 -14 21 -10 8 -16 18 -13 23 3 5 0 7 -8 5 -8 -3 -13 -11 -12 -17 2 -6 -3 -11 -10 -11 -8 0 -7 -4 3 -10 25 -16 6 -11 -41 11 -62 30 -73 40 -57 52 10 7 9 8 -3 4 -23 -8 -66 41 -74 83 -20 112 78 144 170 56 25 -23 45 -37 45 -30 0 6 7 14 15 18 8 3 15 13 15 22 0 12 3 14 13 5 11 -8 13 -4 9 22 -4 27 -6 29 -12 12 -7 -20 -7 -20 -12 0 -7 35 10 89 37 113 31 26 43 27 74 6z"/>
+<path d="M1823 4395 c0 -7 6 -11 14 -8 7 3 13 6 13 8 0 2 -6 5 -13 8 -8 3 -14 -1 -14 -8z"/>
+<path d="M1880 4400 c-9 -6 -10 -10 -3 -10 6 0 15 5 18 10 8 12 4 12 -15 0z"/>
+<path d="M1620 4266 c0 -2 7 -7 16 -10 8 -3 12 -2 9 4 -6 10 -25 14 -25 6z"/>
+<path d="M1566 4197 c3 -10 9 -15 12 -12 3 3 0 11 -7 18 -10 9 -11 8 -5 -6z"/>
+<path d="M1700 4160 c0 -5 -8 -10 -19 -10 -25 0 -48 -27 -34 -41 8 -8 11 -6 10 7 -2 14 4 19 23 17 19 -1 26 4 27 18 1 10 0 19 -3 19 -2 0 -4 -4 -4 -10z"/>
+<path d="M1877 4097 c-4 -10 -7 -26 -7 -35 1 -15 2 -15 11 1 6 10 9 25 7 35 -3 16 -4 15 -11 -1z"/>
+<path d="M1840 4025 c0 -8 4 -15 9 -15 5 0 11 7 15 15 3 9 0 15 -9 15 -8 0 -15 -7 -15 -15z"/>
+</g></svg>`;
+
+            const TOKEN_RE = /[MmLlHhVvCcSsQqTtAaZz]|-?\d*\.?\d+(?:[eE][-+]?\d+)?|-/g;
+            function parsePath(d){ const tokens = d.match(TOKEN_RE) || []; let i=0; let cur=[0,0], start=[0,0], cmd=null, prevCtrl=null; const subpaths=[]; let pts=[]; const num=()=>parseFloat(tokens[i++]); while(i<tokens.length){ const t=tokens[i]; if(/[A-Za-z]/.test(t)){ cmd=t; i++; } if(cmd==='M'||cmd==='m'){ let x=num(), y=num(); if(cmd==='m'){ x+=cur[0]; y+=cur[1]; } cur=[x,y]; start=cur; if(pts.length) subpaths.push(pts); pts=[cur]; cmd = (cmd==='M')?'L':'l'; prevCtrl=null; } else if(cmd==='L'||cmd==='l'){ let x=num(), y=num(); if(cmd==='l'){ x+=cur[0]; y+=cur[1]; } cur=[x,y]; pts.push(cur); prevCtrl=null; } else if(cmd==='H'||cmd==='h'){ let x=num(); if(cmd==='h') x+=cur[0]; cur=[x,cur[1]]; pts.push(cur); prevCtrl=null; } else if(cmd==='V'||cmd==='v'){ let y=num(); if(cmd==='v') y+=cur[1]; cur=[cur[0],y]; pts.push(cur); prevCtrl=null; } else if(cmd==='C'||cmd==='c'){ let x1=num(),y1=num(),x2=num(),y2=num(),x=num(),y=num(); if(cmd==='c'){ x1+=cur[0];y1+=cur[1];x2+=cur[0];y2+=cur[1];x+=cur[0];y+=cur[1]; } const p0=cur, p1=[x1,y1], p2=[x2,y2], p3=[x,y]; const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]); const n=Math.max(8, Math.min(40, Math.floor((dist(p0,p1)+dist(p1,p2)+dist(p2,p3))/14))); for(let k=1;k<=n;k++){ const tt=k/n, u=1-tt; pts.push([ u**3*p0[0]+3*u*u*tt*p1[0]+3*u*tt*tt*p2[0]+tt**3*p3[0], u**3*p0[1]+3*u*u*tt*p1[1]+3*u*tt*tt*p2[1]+tt**3*p3[1] ]); } cur=p3; prevCtrl=p2; } else if(cmd==='Z'||cmd==='z'){ if(pts.length){ pts.push(start); subpaths.push(pts); pts=[]; } cur=start; prevCtrl=null; } else { throw new Error("Unsupported SVG cmd: "+cmd); } } if(pts.length) subpaths.push(pts); return subpaths; }
+            function extractPaths(src){ const res=[]; const re=/<path[^>]*d="([^"]+)"/g; let m; while((m=re.exec(src))) res.push(parsePath(m[1])); return res; }
+            const toUser = p => [p[0]*0.1, 736.0 - p[1]*0.1];
+            const perimeter = pts => { let s=0; for(let i=0;i<pts.length-1;i++) s+=Math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]); return s; };
+            function resample(pts, spacing){ const out=[pts[0]]; let last=pts[0]; for(let i=1;i<pts.length;i++){ const p=pts[i]; while(true){ const d=Math.hypot(p[0]-last[0], p[1]-last[1]); if(d<spacing) break; last=[last[0]+(p[0]-last[0])*spacing/d, last[1]+(p[1]-last[1])*spacing/d]; out.push(last); } } return out; }
+            
+            const SCALE = 1.4; const FIG_CX = 372.5, FIG_CY = 368.0;
+            const CENTER_X = Math.floor(WIDTH/2), CENTER_Y = Math.floor(HEIGHT/2) + 50; 
+            const toScreen = p => [ CENTER_X + (p[0]-FIG_CX)*SCALE, CENTER_Y + (p[1]-FIG_CY)*SCALE ];
+            function isGreen(x,y){ const t=(x-372.0)/100.0; const yb=375.0 + 55.0*Math.max(0, 1.0 - t*t)**2; return y > yb; }
+
+            const _SPRITES = PALETTE.map(()=>[[],[]]); for(let ci=0; ci<PALETTE.length; ci++){ for(let r=0;r<2;r++) _SPRITES[ci][r]=new Array(32).fill(null); }
+            function getSprite(ci, rad, bucket){ let spr = _SPRITES[ci][rad-1][bucket]; if(spr) return spr; const col = PALETTE[ci]; const ss=4; const dim=rad*2+4; const big=document.createElement("canvas"); big.width=dim*ss; big.height=dim*ss; const bctx=big.getContext("2d"); bctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${bucket*8/255})`; bctx.beginPath(); bctx.arc(dim*ss/2, dim*ss/2, rad*ss, 0, Math.PI*2); bctx.fill(); const small=document.createElement("canvas"); small.width=dim; small.height=dim; const sctx=small.getContext("2d"); sctx.imageSmoothingEnabled = true; sctx.drawImage(big, 0,0, dim, dim); _SPRITES[ci][rad-1][bucket]=small; return small; }
+            class StippleDot{ constructor(x,y,color,size,isOutline,phase){ this.x=x; this.y=y; this.ci = COLOR_INDEX[color.toString()]; this.rad = size>=1.5 ? 2 : 1; this.hw = this.rad+2; this.phase=phase; } }
+
+            function buildColoredRose(){
+              let seed = 42; const origRandom = Math.random; Math.random = ()=>{ seed = (seed*9301 + 49297) % 233280; return seed/233280; }; const rnd = ()=>Math.random();
+              const paths = extractPaths(SVG_SRC); const userPaths = paths.map(subs=>subs.map(s=>s.map(toUser)));
+              const fig = userPaths[0]; const marks = []; for(let i=1;i<=14;i++) for(const s of userPaths[i]) marks.push(s);
+              const star = userPaths[15].slice(); const heart = userPaths[16].slice(); const heartDots = []; for(let i=17;i<=23;i++) for(const s of userPaths[i]) heartDots.push(s);
+              const fills=[], glows=[], glowPts=[];
+              const addGlow=(pUser,col,size)=>{ const [sx,sy]=toScreen(pUser); glows.push(new StippleDot(sx-CENTER_X, sy-CENTER_Y, col, size, true, rnd()*Math.PI*2)); glowPts.push(pUser); };
+              const centerOf=(s)=>{ let x=0,y=0; for(const p of s){x+=p[0]; y+=p[1];} return [x/s.length, y/s.length]; };
+              fig.forEach((s, idx)=>{ const per=perimeter(s); const spacing = per<40 ? 2.2 : 4.6; const size = per<40 ? 2.0 : 2.2; if(idx===0){ for(const p of resample(s, spacing)){ addGlow(p, isGreen(p[0],p[1]) ? OUTLINE_GREEN : OUTLINE_ROSE, size); } } else { const c=centerOf(s); const col = isGreen(c[0],c[1]) ? OUTLINE_GREEN : OUTLINE_ROSE; for(const p of resample(s, spacing)) addGlow(p, col, size); } });
+              for(const s of marks){ const c=centerOf(s); const col=isGreen(c[0],c[1])?OUTLINE_GREEN:OUTLINE_ROSE; for(const p of resample(s,2.2)) addGlow(p,col,2.0); }
+              for(const s of star) for(const p of resample(s,3.2)) addGlow(p,STAR_GOLD,2.3);
+              heart.forEach((s,i)=>{ const col = i>0 ? HEART_PINK : OUTLINE_ROSE; const sp = i===0?3.0:2.2; const sz = i===0?2.3:1.9; for(const p of resample(s,sp)) addGlow(p,col,sz); });
+              for(const s of heartDots) for(const p of resample(s,2.2)) addGlow(p,OUTLINE_ROSE,1.8);
+
+              const CELL=5.0; const grid={}; for(const p of glowPts){ const key=`${Math.floor(p[0]/CELL)},${Math.floor(p[1]/CELL)}`; (grid[key]=grid[key]||[]).push(p); }
+              function excluded(x,y,r){ const r2=r*r; const cx=Math.floor(x/CELL), cy=Math.floor(y/CELL); for(let i=cx-1;i<=cx+1;i++){ for(let j=cy-1;j<=cy+1;j++){ const arr=grid[`${i},${j}`]; if(!arr) continue; for(const p of arr){ const dx=p[0]-x, dy=p[1]-y; if(dx*dx+dy*dy<r2) return true; } } } return false; }
+              function fillRegion(contour, colFn, sizeLo, sizeHi, step, keep, r){ const edges=[]; for(let i=0;i<contour.length-1;i++){ const a=contour[i], b=contour[i+1]; if(Math.abs(a[1]-b[1])<1e-9) continue; edges.push([a[0],a[1],b[0],b[1]]); } const yMin=Math.min(...contour.map(p=>p[1])); const yMax=Math.max(...contour.map(p=>p[1])); function spansAt(y){ const xs=[]; for(const [x1,y1,x2,y2] of edges){ if((y1>y)!==(y2>y)){ xs.push(x1 + (y-y1)*(x2-x1)/(y2-y1)); } } xs.sort((a,b)=>a-b); const out=[]; for(let k=0;k<xs.length-1;k+=2) out.push([xs[k], xs[k+1]]); return out; } let y=yMin+1.0; while(y<yMax){ const yj=y + (rnd()*2.8 - 1.4); for(const [xa,xb] of spansAt(yj)){ const L=xb-xa; if(L<2.0) continue; const n=Math.max(1, Math.floor(L/step)); const st=L/n; for(let k=0;k<n;k++){ const x = xa + (k+0.5)*st + (rnd()*2.6 - 1.3); const yy = yj + (rnd()*3.6 - 1.8); if(excluded(x,yy,r) || rnd()>keep) continue; const [sx,sy]=toScreen([x,yy]); fills.push(new StippleDot(sx-CENTER_X, sy-CENTER_Y, colFn(x,yy), sizeLo + rnd()*(sizeHi-sizeLo), false, rnd()*Math.PI*2)); } } y+=step; } }
+              fillRegion(fig[0], (x,y)=> isGreen(x,y)?LEAF_BASE:PETAL_BASE, 1.45, 1.8, 3.9, 0.89, 4.3); fillRegion(heart[0], ()=>HEART_PINK, 1.3, 1.55, 2.5, 0.95, 2.8); fillRegion(star[0], ()=>STAR_GOLD, 1.3, 1.55, 2.4, 0.95, 2.8);
+              glows.push(...buildNameDots("anh yêu em", 40, 720, HEIGHT - 50, TEXT_LILAC));
+              for(let ci=0;ci<PALETTE.length;ci++){ for(const rad of [1,2]){ for(let b=0;b<32;b++) getSprite(ci,rad,b); } }
+              Math.random = origRandom; return {fills, glows};
+            }
+            function buildNameDots(text, size, rightX, bottomY, color){
+              const off=document.createElement("canvas"); off.width=400; off.height=100; const octx=off.getContext("2d");
+              octx.font = `${size}px "Playfair Display", "Segoe Print", Arial, sans-serif`; octx.fillStyle="#fff"; octx.textBaseline="alphabetic"; octx.fillText(text, 0, size);
+              const w=octx.measureText(text).width; const imgData=octx.getImageData(0,0,Math.ceil(w), size+15); const d=imgData.data; const iw=imgData.width, ih=imgData.height;
+              const ox = rightX - iw; const oy = bottomY - ih; const minD=3.0, md2=minD*minD; const kept=[];
+              for(let row=0;row<ih;row++){ let xx=0; while(xx<iw){ if(d[(row*iw+xx)*4+3]>90){ const x0=xx; while(xx<iw && d[(row*iw+xx)*4+3]>90) xx++; let x=x0+0.5; while(x<x0 + (xx-x0)){ let ok=true; for(const [kx,ky] of kept){ const dx=kx-x, dy=ky-row; if(dx*dx+dy*dy<md2){ ok=false; break; } } if(ok) kept.push([x,row]); x+=minD*0.9; } } else xx++; } }
+              const dots=[]; for(const [px,py] of kept){ const jx=ox+px + (Math.random()*1.0 - 0.5); const jy=oy+py + (Math.random()*1.0 - 0.5); dots.push(new StippleDot(jx-CENTER_X, jy-CENTER_Y, color, 1.3 + Math.random()*0.2, true, Math.random()*Math.PI*2)); } return dots;
+            }
+            const bgStars=[]; for(let i=0;i<300;i++){ bgStars.push([ Math.floor(Math.random()*WIDTH), Math.floor(Math.random()*HEIGHT), 0.8 + Math.random()*1.5, 0.02 + Math.random()*0.04, Math.random()*Math.PI*2 ]); }
+            const _STAR_CACHE={}; const {fills:roseFills, glows:roseGlows} = buildColoredRose();
+            let running=true; let angleSway=0; let lastTime=performance.now();
+            function loop(now){
+              if(!running) return; requestAnimationFrame(loop); const dt=Math.min(0.05,(now-lastTime)/1000); lastTime=now; angleSway += 0.035;
+              ctx.fillStyle=`rgb(${SPACE_BG[0]},${SPACE_BG[1]},${SPACE_BG[2]})`; ctx.fillRect(0,0,WIDTH,HEIGHT);
+              const tVal = now*0.005; for(const [sx,sy,sr,spd,ph] of bgStars){ const sAlpha = Math.floor((Math.sin(tVal*spd*20.0+ph)+1)*85+60); const key = `${Math.round(sr)}_${sAlpha>>4}`; let sSurf = _STAR_CACHE[key]; if(!sSurf){ sSurf=document.createElement("canvas"); sSurf.width=8; sSurf.height=8; const sctx=sSurf.getContext("2d"); sctx.fillStyle=`rgba(215,235,255,${(sAlpha>>4)*16/255})`; sctx.beginPath(); sctx.arc(4,4,Math.round(sr),0,Math.PI*2); sctx.fill(); _STAR_CACHE[key]=sSurf; } ctx.drawImage(sSurf, sx-4, sy-4); }
+              const sway=Math.sin(angleSway)*0.025; const cs=Math.cos(sway), sn=Math.sin(sway); const ticks=now; const tick4=ticks*0.004, tick5=ticks*0.005; const cx=CENTER_X, cy=CENTER_Y;
+              for(const d of roseFills){ const px=cx + d.x*cs - d.y*sn; const py=cy + d.x*sn + d.y*cs; const b=Math.floor((Math.sin(tick4+d.phase)+1)*30+165)>>3; ctx.drawImage(getSprite(d.ci, d.rad, b), px-d.hw, py-d.hw); }
+              for(const d of roseGlows){ const px=cx + d.x*cs - d.y*sn; const py=cy + d.x*sn + d.y*cs; const b=Math.floor((Math.sin(tick5+d.phase)+1)*11.5+232)>>3; ctx.drawImage(getSprite(d.ci, d.rad, b), px-d.hw, py-d.hw); }
+            }
+            requestAnimationFrame(loop);
+            </script>
+            </body>
+            </html>
+        '></iframe>
+    </div>
+
+    <!-- MÀN 5: Thiệp 20/10 và Slideshow -->
+    <div id="scene5" class="scene">
+        <iframe id="iframe-card" class="scene-iframe" srcdoc='
+            <!doctype html>
+            <html lang="vi">
+              <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+                <title>Gửi Bảo Như 💖</title>
+                <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Dancing+Script:wght@600;700&family=Be+Vietnam+Pro:wght@300;400;600&display=swap&subset=vietnamese" rel="stylesheet" />
+                <style>
+                  :root { --pink: #ff6fae; --rose: #ff3d84; --gold: #ffd9a8; --text: #fff1f6; --serif: "Playfair Display", "Times New Roman", Georgia, serif; --script: "Dancing Script", "Segoe Script", "Brush Script MT", cursive; --sans: "Be Vietnam Pro", "Segoe UI", Roboto, Arial, sans-serif; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+                  html, body { height: 100%; margin: 0; overflow: hidden; }
+                  body { background: radial-gradient(circle at 50% 30%, #4a1240, #2a0a24 70%); color: var(--text); font-family: var(--sans); }
+                  .glow { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.35; pointer-events: none; }
+                  .g1 { width: 50vmax; height: 50vmax; background: #ff2d8a; left: -15vmax; top: -10vmax; }
+                  .g2 { width: 40vmax; height: 40vmax; background: #8a3dff; right: -12vmax; bottom: -10vmax; }
+                  .star { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: #fff; animation: tw 3s infinite alternate; pointer-events: none; }
+                  @keyframes tw { from { opacity: 0.1; } to { opacity: 0.9; box-shadow: 0 0 8px #fff; } }
+                  #stage { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; transition: opacity 1s, transform 1s; z-index: 2; }
+                  #stage.hide { opacity: 0; transform: scale(0.92); pointer-events: none; }
+                  .line { display: flex; flex-wrap: wrap; justify-content: center; font-family: var(--serif); font-weight: 900; line-height: 1.15; }
+                  .l1 { font-size: clamp(1.9rem, 8.5vw, 4rem); color: #fff; }
+                  .l2 { font-size: clamp(2.6rem, 12vw, 5.8rem); color: var(--pink); text-shadow: 0 0 30px var(--rose); }
+                  .slot { display: inline-block; opacity: 0; min-width: 0.05em; }
+                  .slot.sp { min-width: 0.35em; }
+                  .slot.ok { opacity: 1; animation: pop 0.6s; }
+                  @keyframes pop { 0% { transform: scale(1.6); filter: brightness(2.5); } 100% { transform: none; filter: none; } }
+                  .fly { position: fixed; left: 0; top: 0; z-index: 3; pointer-events: none; font-family: var(--serif); font-weight: 900; color: #ffb3d4; text-shadow: 0 0 14px var(--rose); will-change: transform; transition: opacity 1s; }
+                  #hint { font-family: var(--script); font-size: 1.6rem; color: var(--gold); animation: pulse 1.6s infinite; margin-top: 1rem; text-align: center; padding: 0 1rem; }
+                  @keyframes pulse { 50% { opacity: 0.5; transform: scale(1.05); } }
+                  #btn, .b2 { padding: 0.85rem 2rem; border: 0; border-radius: 99px; font: 600 1.05rem var(--sans); color: #fff; cursor: pointer; background: linear-gradient(135deg, #ff6fae, #ff3d84); box-shadow: 0 0 28px rgba(255, 61, 132, 0.55); transition: transform 0.2s; z-index: 5; }
+                  #btn:hover, .b2:hover { transform: scale(1.07); }
+                  #card { position: fixed; inset: 0; display: flex; justify-content: center; align-items: flex-start; padding: 1rem; z-index: 4; opacity: 0; pointer-events: none; transition: opacity 1.2s; overflow-y: auto; }
+                  #card.show { opacity: 1; pointer-events: auto; }
+                  .box { position: relative; margin: auto; max-width: 420px; width: 100%; text-align: center; padding: 1.5rem 1.1rem 1.1rem; border-radius: 24px; background: linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)); border: 1px solid rgba(255, 182, 213, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 25px 90px rgba(255, 61, 132, 0.35), inset 0 0 40px rgba(255, 150, 200, 0.08); transform: scale(0.85) translateY(30px); transition: transform 1.2s cubic-bezier(0.2, 1.3, 0.3, 1); }
+                  #card.show .box { transform: none; }
+                  .badge { display: inline-block; padding: 0.25rem 0.8rem; border-radius: 99px; font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: #4a1240; font-weight: 600; background: linear-gradient(90deg, #ffd9a8, #ffb3d4); box-shadow: 0 0 20px rgba(255, 217, 168, 0.5); }
+                  .big { font-size: 2.1rem; margin: 0.4rem 0 0; animation: beat 1.2s infinite; }
+                  @keyframes beat { 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.18); } }
+                  .t1 { font-family: var(--script); font-size: 1.25rem; color: var(--gold); margin: 0; }
+                  .t2 { font-family: var(--serif); font-size: clamp(1.7rem, 8vw, 2.4rem); margin: 0 0 0.2rem; background: linear-gradient(90deg, #ff9ec8, #fff, #ffd9a8, #ff6fae, #ff9ec8); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sh 5s linear infinite; }
+                  @keyframes sh { to { background-position: -250% 0; } }
+                  .orn { display: flex; align-items: center; gap: 0.6rem; justify-content: center; color: var(--pink); margin: 0.4rem 0 1rem; }
+                  .orn:before, .orn:after { content: ""; height: 1px; width: 22%; background: linear-gradient(90deg, transparent, var(--pink)); }
+                  .orn:after { transform: scaleX(-1); }
+                  #msg { font-weight: 300; font-size: 0.88rem; line-height: 1.7; min-height: 6.4em; margin: 0 0.3rem; }
+                  .wishes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; margin: 0.8rem 0; }
+                  .w { padding: 0.55rem 0.45rem; border-radius: 14px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 182, 213, 0.25); opacity: 0; transform: translateY(20px) scale(0.9); transition: all 0.8s cubic-bezier(0.2, 1.4, 0.3, 1); }
+                  .w.on { opacity: 1; transform: none; }
+                  .w i { font-style: normal; font-size: 1.2rem; display: block; }
+                  .w b { display: block; font-family: var(--serif); font-size: 0.82rem; color: #ffc2dc; margin: 0.2rem 0; }
+                  .w span { font-size: 0.68rem; font-weight: 300; opacity: 0.85; line-height: 1.5; display: block; }
+                  .quote { font-family: var(--script); font-size: 1.1rem; color: var(--gold); line-height: 1.5; opacity: 0; transition: opacity 1.2s; }
+                  .sign { font-family: var(--script); font-size: 1.2rem; color: var(--pink); margin: 0.4rem 0 0.3rem; opacity: 0; transition: opacity 1.2s; }
+                  .on2 { opacity: 1; }
+                  .btns { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; opacity: 0; transition: opacity 1s; margin-top: 10px; }
+                  .heart { position: fixed; bottom: -50px; z-index: 1; pointer-events: none; animation: up linear forwards; filter: drop-shadow(0 0 8px rgba(255, 61, 132, 0.7)); }
+                  @keyframes up { to { transform: translate(var(--dx), -115vh) rotate(var(--rot)); opacity: 0; } }
+                  .burst { position: fixed; z-index: 9; pointer-events: none; animation: bst 0.9s ease-out forwards; }
+                  @keyframes bst { to { transform: translate(var(--bx), var(--by)) scale(0.3); opacity: 0; } }
+                  * { cursor: none !important; }
+                  #cur { position: fixed; left: 0; top: 0; z-index: 99; pointer-events: none; font-size: 26px; color: #ff3d84; text-shadow: 0 0 12px #ff3d84, 0 0 28px #ff6fae; opacity: 0; transition: opacity 0.3s; }
+                  #cur span { display: inline-block; animation: beat 1.2s infinite; }
+                  .trail { position: fixed; z-index: 98; pointer-events: none; color: #ff6fae; transform: translate(-50%, -50%); animation: tr 1.1s ease-out forwards; text-shadow: 0 0 8px rgba(255, 61, 132, 0.8); }
+                  @keyframes tr { to { transform: translate(calc(-50% + var(--tx)), -90px) scale(0.4); opacity: 0; } }
+                  #slideshow { position: fixed; inset: 0; z-index: 10; background: #110511; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
+                  #slideshow.show { opacity: 1; pointer-events: auto; }
+                  .slide-img { position: absolute; max-width: 90%; max-height: 80%; border-radius: 20px; box-shadow: 0 10px 40px rgba(255, 61, 132, 0.4), 0 0 0 4px rgba(255,255,255,0.1); object-fit: cover; opacity: 0; transform: scale(0.9); transition: opacity 1.2s ease, transform 1.2s ease; }
+                  .slide-img.active { opacity: 1; transform: scale(1); }
+                  #final-message { position: fixed; inset: 0; z-index: 11; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(17, 5, 17, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); opacity: 0; pointer-events: none; transition: opacity 1.5s ease; padding: 2rem; text-align: center; }
+                  #final-message.show { opacity: 1; pointer-events: auto; }
+                  #text-1, #text-2 { font-family: var(--script); color: var(--gold); transition: opacity 1s, transform 1s; }
+                  #text-1 { font-size: clamp(1.5rem, 6vw, 2.5rem); opacity: 1; transform: translateY(0); }
+                  #text-2 { font-family: var(--serif); font-size: clamp(2rem, 8vw, 3.5rem); color: var(--pink); text-shadow: 0 0 30px var(--rose), 0 0 60px var(--rose); opacity: 0; transform: translateY(20px); margin-top: 1rem; }
+                  .text-hidden { opacity: 0 !important; transform: translateY(-20px) !important; }
+                  .text-show { opacity: 1 !important; transform: translateY(0) !important; }
+                </style>
+              </head>
+              <body>
+                <div class="glow g1"></div>
+                <div class="glow g2"></div>
+                <div id="stage">
+                  <div class="line l1" id="l1"></div>
+                  <div class="line l2" id="l2"></div>
+                  <div id="hint">✦ Có một thông điệp đang bay lạc... ✦</div>
+                  <button id="btn">Giải mã 💌</button>
+                </div>
+                <div id="card">
+                  <div class="box">
+                    <span class="badge">20 · 10 &nbsp;Ngày Phụ nữ Việt Nam</span>
+                    <div class="big">💖</div>
+                    <p class="t1">Gửi riêng cho</p>
+                    <h1 class="t2" id="name"></h1>
+                    <div class="orn">❀ ❤ ❀</div>
+                    <div id="msg"></div>
+                    <div class="wishes" id="wishes"></div>
+                    <div class="quote" id="quote"></div>
+                    <div class="sign" id="sign"></div>
+                    <div class="btns" id="btns">
+                      <button class="b2" id="btn-flower">Xem bông hoa đẹp nhất 🌸</button>
+                    </div>
+                  </div>
+                </div>
+                <div id="slideshow">
+                  <img class="slide-img" id="img1" src="https://raw.githubusercontent.com/hhhh22022010-ops/Tdung/main/Messenger_creation_9C9A3895-40C0-47A0-9F9F-742663D9ADAC.jpeg" alt="Hoa 1">
+                  <img class="slide-img" id="img2" src="https://raw.githubusercontent.com/hhhh22022010-ops/Tdung/main/IMG_20261019_104534.jpg" alt="Hoa 2">
+                  <img class="slide-img" id="img3" src="https://raw.githubusercontent.com/hhhh22022010-ops/Tdung/main/IMG_20261019_104541.jpg" alt="Hoa 3">
+                </div>
+                <div id="final-message">
+                  <div id="text-1">Và điều cuối anh muốn nói là...</div>
+                  <div id="text-2">Anh yêu em, cả hiện tại, sau này và mãi mãi</div>
+                </div>
+                <script>
+                  const CFG = { l1: "CHÚC MỪNG 20/10", l2: "Bảo Như", name: "Bảo Như", intro: "Nhân ngày 20/10, chúc công chúa của anh luôn rạng rỡ, xinh đẹp và hạnh phúc. Cảm ơn em đã đến bên anh, cho anh được chăm sóc và yêu thương em mỗi ngày. Mong rằng từng phút giây bên anh đều mang lại cho em sự ấm áp và bình yên nhất.", wishes: [ ["🌸", "Luôn xinh đẹp", "Trong mắt anh, em luôn là bông hoa rực rỡ nhất."], ["💖", "Thật hạnh phúc", "Mỗi ngày đều có một niềm vui nhỏ."], ["✨", "Bình yên", "Cùng anh tạo nên thật nhiều kỷ niệm ngọt ngào."], ["🌹", "Được yêu thương", "Để anh dành trọn trái tim này chăm sóc cho em."] ], quote: "Cảm ơn em vì đã chọn ở bên anh và làm cho cuộc sống của anh trở nên ngập tràn màu hồng.", sign: "— Chàng trai của riêng em 🌹" };
+                  const POOL = "ABCDEFGHIKLMNOPQRSTUVXYĂÂÊÔƠƯ0123456789"; const rnd = (a) => Array.isArray(a) || typeof a === "string" ? a[Math.floor(Math.random() * a.length)] : 0; const R = (a, b) => Math.random() * (b - a) + a; const $ = (id) => document.getElementById(id);
+                  for (let i = 0; i < 60; i++) { const s = document.createElement("div"); s.className = "star"; s.style.cssText = `left:${R(0, 100)}vw;top:${R(0, 100)}vh;animation-delay:${R(0, 3)}s`; document.body.appendChild(s); }
+                  $("name").textContent = CFG.name; $("sign").textContent = CFG.sign; $("quote").textContent = CFG.quote;
+                  $("wishes").innerHTML = CFG.wishes.map((w) => `<div class="w"><i>${w[0]}</i><b>${w[1]}</b><span>${w[2]}</span></div>`).join("");
+                  const flyers = []; let W = innerWidth, H = innerHeight, decoding = false, landed = 0, total = 0;
+                  function build(el, text, cls) { [...text].forEach((c) => { const s = document.createElement("span"); s.className = "slot" + (c === " " ? " sp" : ""); s.textContent = c === " " ? "\u00a0" : c; el.appendChild(s); if (c !== " ") flyers.push({ slot: s, c, cls, real: true }); }); }
+                  build($("l1"), CFG.l1, "l1"); build($("l2"), CFG.l2, "l2"); total = flyers.length;
+                  function init() { flyers.forEach((f) => mk(f, parseFloat(getComputedStyle(f.slot).fontSize))); for (let i = 0; i < 34; i++) { const f = { real: false, c: "", cls: "" }; flyers.push(f); mk(f, R(18, 56)); } requestAnimationFrame(tick); }
+                  function mk(f, size) { const e = document.createElement("div"); e.className = "fly"; e.style.fontSize = size + "px"; e.style.opacity = f.real ? 1 : 0.55; e.style.color = rnd(["#ffb3d4", "#ff6fae", "#ffd9a8", "#e0b3ff", "#fff"]); e.textContent = rnd(POOL); document.body.appendChild(e); Object.assign(f, { el: e, x: R(0, W), y: R(0, H), vx: R(-2.6, 2.6), vy: R(-2.6, 2.6), rot: R(0, 360), vr: R(-4, 4), t: R(0, 6), sc: 1, state: "fly" }); }
+                  function tick() { flyers.forEach((f) => { if (f.state === "done" || !f.el) return; if (f.state === "fly") { f.vx += R(-0.12, 0.12); f.vy += R(-0.12, 0.12); const m = Math.hypot(f.vx, f.vy), mx = 3.2; if (m > mx) { f.vx *= mx / m; f.vy *= mx / m; } f.x += f.vx; f.y += f.vy; f.rot += f.vr; f.t += 0.04; f.sc = 1 + Math.sin(f.t) * 0.35; if (f.x < 0 || f.x > W) f.vx *= -1; if (f.y < 0 || f.y > H) f.vy *= -1; f.x = Math.max(-10, Math.min(W + 10, f.x)); f.y = Math.max(-10, Math.min(H + 10, f.y)); } else { const k = 0.075; f.x += (f.tx - f.x) * k; f.y += (f.ty - f.y) * k; f.rot += (0 - f.rot) * k; f.sc += (1 - f.sc) * k; if (Math.hypot(f.tx - f.x, f.ty - f.y) < 1.2 && Math.abs(f.rot) < 1) land(f); } f.el.style.transform = `translate(${f.x}px,${f.y}px) translate(-50%,-50%) rotate(${f.rot}deg) scale(${f.sc})`; }); requestAnimationFrame(tick); }
+                  function land(f) { f.state = "done"; f.el.remove(); f.slot.classList.add("ok"); sparkle(f.slot); if (++landed === total) { $("hint").textContent = "Giải mã thành công 💖"; heartStorm(); setTimeout(showCard, 1800); } }
+                  setInterval(() => flyers.forEach((f) => { if (f.el && f.state !== "done" && Math.random() < 0.4) f.el.textContent = rnd(POOL); }), 150);
+                  function decode() { if (decoding) return; decoding = true; $("btn").style.display = "none"; $("hint").textContent = "Các chữ cái đang tìm về nhau... ✨"; let i = 0; flyers.forEach((f) => { if (f.real) { setTimeout(() => { const r = f.slot.getBoundingClientRect(); f.tx = r.left + r.width / 2; f.ty = r.top + r.height / 2; f.rot = (((f.rot % 360) + 540) % 360) - 180; f.state = "go"; f.el.textContent = f.c; }, 600 + i++ * 160); } else { setTimeout(() => { f.el.style.opacity = 0; }, 500 + R(0, 1500)); setTimeout(() => { f.state = "done"; f.el.remove(); }, 2600); } }); }
+                  $("btn").onclick = decode; $("stage").addEventListener("click", (e) => { if (e.target.id !== "btn") decode(); }); addEventListener("resize", () => { W = innerWidth; H = innerHeight; }); (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(init);
+                  function sparkle(el) { const r = el.getBoundingClientRect(); for (let i = 0; i < 4; i++) burst(r.left + r.width / 2, r.top + r.height / 2, "✦", 10); }
+                  function burst(x, y, ch, size) { const b = document.createElement("div"); b.className = "burst"; b.textContent = ch; b.style.cssText += `left:${x}px;top:${y}px;font-size:${size + R(0, 10)}px;color:#ffc2dc;--bx:${R(-70, 70)}px;--by:${R(-70, 70)}px`; document.body.appendChild(b); setTimeout(() => b.remove(), 900); }
+                  const HEARTS = ["❤", "💖", "💗", "💕", "💘", "🌸", "🌹", "💝"];
+                  function heart() { const h = document.createElement("div"); h.className = "heart"; h.textContent = rnd(HEARTS); const d = R(5, 11); h.style.cssText += `left:${R(0, 100)}vw;font-size:${R(16, 44)}px;animation-duration:${d}s;--dx:${R(-80, 80)}px;--rot:${R(-40, 40)}deg;opacity:${R(0.6, 1)}`; document.body.appendChild(h); setTimeout(() => h.remove(), d * 1000); }
+                  function heartStorm() { for (let i = 0; i < 40; i++) setTimeout(heart, i * 60); }
+                  function showCard() { $("stage").classList.add("hide"); $("card").classList.add("show"); setInterval(heart, 280); heartStorm(); let i = 0; setTimeout(function type() { $("msg").textContent = CFG.intro.slice(0, ++i); if (i < CFG.intro.length) setTimeout(type, 40); else { document.querySelectorAll(".w").forEach((w, k) => setTimeout(() => w.classList.add("on"), k * 350)); setTimeout(() => $("quote").classList.add("on2"), 1700); setTimeout(() => $("sign").classList.add("on2"), 2500); setTimeout(() => ($("btns").style.opacity = 1), 3000); } }, 1200); }
+                  $("btn-flower").addEventListener("click", () => { $("card").classList.remove("show"); setTimeout(() => { $("slideshow").classList.add("show"); runSlideshow(); }, 1000); });
+                  function runSlideshow() { const images = [$("img1"), $("img2"), $("img3")]; let currentIndex = 0; function showNextImage() { if (currentIndex > 0) { images[currentIndex - 1].classList.remove("active"); } if (currentIndex < images.length) { images[currentIndex].classList.add("active"); currentIndex++; setTimeout(showNextImage, 2500); } else { setTimeout(showFinalMessage, 1000); } } setTimeout(showNextImage, 500); }
+                  function showFinalMessage() { $("slideshow").classList.remove("show"); setTimeout(() => { $("final-message").classList.add("show"); setTimeout(() => { $("text-1").classList.add("text-hidden"); setTimeout(() => { $("text-2").classList.add("text-show"); heartStorm(); }, 1000); }, 3000); }, 1000); }
+                  addEventListener("keydown", (e) => { if (e.code === "Space") { e.preventDefault(); if (!decoding) decode(); else heartStorm(); } });
+                  const cur = document.createElement("div"); cur.id = "cur"; cur.innerHTML = "<span>❤</span>"; document.body.appendChild(cur); let lt = 0;
+                  addEventListener("pointermove", (e) => { cur.style.transform = `translate(${e.clientX}px,${e.clientY}px) translate(-50%,-50%)`; cur.style.opacity = 1; const n = performance.now(); if (n - lt < 50) return; lt = n; const t = document.createElement("div"); t.className = "trail"; t.textContent = rnd(["❤", "💖", "💗", "💕"]); t.style.cssText += `left:${e.clientX}px;top:${e.clientY}px;font-size:${R(10, 20)}px;--tx:${R(-30, 30)}px`; document.body.appendChild(t); setTimeout(() => t.remove(), 1100); });
+                  document.addEventListener("mouseleave", () => (cur.style.opacity = 0));
+                  $("card").addEventListener("click", (e) => { if (e.target.tagName !== "BUTTON") { for (let i = 0; i < 6; i++) burst(e.clientX, e.clientY, rnd(HEARTS), 18); } });
+                </script>
+              </body>
+            </html>
+        '></iframe>
+    </div>
+
+    <script>
+        // --- LOGIC ĐIỀU KHIỂN CHUYỂN CẢNH VÀ ÂM THANH ---
+        const scenes = {
+            1: document.getElementById('scene1'),
+            2: document.getElementById('scene2'),
+            3: document.getElementById('scene3'),
+            4: document.getElementById('scene4'),
+            5: document.getElementById('scene5')
+        };
+        const music1 = document.getElementById('music-1');
+        const music2 = document.getElementById('music-2');
+        const music3 = document.getElementById('music-3');
+        const startOverlay = document.getElementById('start-overlay');
+
+        function showScene(id) {
+            Object.values(scenes).forEach(s => s.classList.remove('active'));
+            if(scenes[id]) {
+                scenes[id].classList.add('active');
+            }
+        }
+
+        // 1. Bắt đầu
+        document.getElementById('start-btn').addEventListener('click', () => {
+            startOverlay.style.opacity = 0;
+            setTimeout(() => startOverlay.style.display = 'none', 1000);
+            
+            music1.volume = 0.7;
+            music1.play().catch(e => console.log("Trình duyệt chặn autoplay:", e));
+            
+            showScene(1);
+        });
+
+        function crossfadeMusic(oldAudio, newAudio) {
+            let fadeOut = setInterval(() => {
+                if (oldAudio.volume > 0.05) {
+                    oldAudio.volume -= 0.05;
+                } else {
+                    clearInterval(fadeOut);
+                    oldAudio.pause();
+                }
+            }, 100);
+
+            newAudio.volume = 0;
+            newAudio.play().catch(e => console.log(e));
+            let fadeIn = setInterval(() => {
+                if (newAudio.volume < 0.7) {
+                    newAudio.volume += 0.05;
+                } else {
+                    clearInterval(fadeIn);
+                }
+            }, 100);
+        }
+
+        // 2. Lắng nghe tín hiệu
+        window.addEventListener('message', (event) => {
+            // Tín hiệu 1: Bắn trúng tim -> Sang cảnh 2
+            if (event.data === 'bow_hit') {
+                showScene(2); 
+                
+                // Đợi 7s chuyển sang chạy chữ
+                setTimeout(() => {
+                    showScene(3);
+                    // Bật nhạc 2 lên ngay khi màn hình chữ hiện ra
+                    crossfadeMusic(music1, music2);
+                    
+                    // Kích hoạt hiệu ứng chạy chữ
+                    startTypingLyrics();
+                }, 7000);
+            }
+        });
+
+        // === LOGIC CHẠY CHỮ TRỰC TIẾP TRÊN DOM (LYRIC VIDEO) ===
+        function startTypingLyrics() {
+            const container = document.getElementById("lyric-container");
+            container.innerHTML = ""; // Xóa nội dung cũ (nếu chạy lại)
+            
+            const lyrics = [
+                "Anh đã cố đổi thay để mạnh mẽ hơn vì anh sợ cô đơn.",
+                "Nói yêu má hồng, mắt cong, bờ môi mọng rất khó.",
+                "Vì lo trong trái tim em đã có ai.",
+                "Nhưng nếu yêu em là sai thì anh đây không cần đúng.",
+                "Người yêu ơi... yêu mình anh được không?",
+                "Từ giờ và sau này xua lạnh nơi đêm mùa đông.",
+                "Là ngày ta sum vầy, con tim hao gầy...",
+                "Tình yêu đong đầy...Hãy để anh chứng minh cho em thấy...",
+                "Người yêu ơi, yêu thì có gì sai đâu có sai đâu!",
+                "Không là em thì ai",
+                "Để anh đưa em về, và tình yêu mãi mê",
+                "Mặc kệ người ta cười chê, bởi vì tình yêu là thế",
+                "Làm người yêu anh nhé bây bê"
+            ];
+
+            let currentIndex = 0;
+
+            function showNextLine() {
+                if (currentIndex < lyrics.length) {
+                    // Xóa dòng cũ
+                    container.innerHTML = "";
+                    
+                    // Tạo dòng mới
+                    const div = document.createElement("div");
+                    div.className = "lyric-line";
+                    div.textContent = lyrics[currentIndex];
+                    container.appendChild(div);
+                    
+                    // Kích hoạt hiệu ứng hiện lên
+                    setTimeout(() => {
+                        div.classList.add("active");
+                    }, 50);
+                    
+                    // Sau 2.8s thì bắt đầu mờ dần
+                    setTimeout(() => {
+                        div.classList.remove("active");
+                        div.classList.add("fade-out");
+                    }, 2800);
+                    
+                    // Sau 4.5s (1.7s sau khi mờ) thì chuyển sang dòng tiếp theo
+                    setTimeout(() => {
+                        currentIndex++;
+                        showNextLine();
+                    }, 5000);
+
+                } else {
+                    // KHI CHẠY CHỮ XONG, CHUYỂN SANG CẢNH HOA HỒNG
+                    setTimeout(() => {
+                        showScene(4);
+                        crossfadeMusic(music2, music3);
+                        
+                        // Đợi 5s sau chuyển sang cảnh thiệp 20/10
+                        setTimeout(() => {
+                            showScene(5);
+                        }, 5000);
+
+                    }, 1500); // Đợi 1.5s sau khi dòng cuối mờ hẳn
+                }
+            }
+
+            // Bắt đầu chạy dòng đầu tiên sau 1s
+            setTimeout(showNextLine, 1000);
+        }
+    </script>
+</body>
+</html>
